@@ -4,6 +4,7 @@ import java.awt.color.ICC_Profile;
 
 import com.oracle.svm.core.annotate.Substitute;
 import com.oracle.svm.core.annotate.TargetClass;
+import com.oracle.svm.core.annotate.TargetElement;
 
 @TargetClass(className = "sun.java2d.cmm.lcms.LCMS")
 final class Target_sun_java2d_cmm_lcms_LCMS {
@@ -70,6 +71,11 @@ final class Target_sun_java2d_cmm_lcms_LCMS {
 
     @TargetClass(className = "sun.java2d.cmm.lcms.LCMSTransform")
     static final class LCMSTransform {
+        @Substitute //
+        @TargetElement(name = TargetElement.CONSTRUCTOR_NAME)
+        void constructor(ICC_Profile profile, int renderType, int transformType) {
+            throw new UnsupportedOperationException("Not implemented yet for GraalVM native images");
+        }
     }
 
 }
