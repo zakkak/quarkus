@@ -112,14 +112,9 @@ public class KafkaProcessor {
 
     static final DotName OBJECT_MAPPER = DotName.createSimple("com.fasterxml.jackson.databind.ObjectMapper");
     private static final Set<String> SASL_PROVIDERS = Arrays.stream(new String[] {
-            "com.sun.security.sasl.ClientFactoryImpl",
-            "com.sun.security.sasl.ServerFactoryImpl",
-            "com.sun.security.sasl.digest.FactoryImpl",
-            "com.sun.security.sasl.gsskerb.FactoryImpl",
-            "com.sun.security.sasl.ntlm.FactoryImpl",
-            "org.apache.kafka.common.security.oauthbearer.internals.OAuthBearerSaslClient$OAuthBearerSaslClientFactory",
-            "org.apache.kafka.common.security.plain.internals.PlainSaslServer$PlainSaslServerFactory",
-            "org.apache.kafka.common.security.scram.internals.ScramSaslClient$ScramSaslClientFactory"
+            "com.sun.security.sasl.Provider",
+            "org.apache.kafka.common.security.scram.internals.ScramSaslClientProvider",
+            "org.apache.kafka.common.security.oauthbearer.internals.OAuthBearerSaslClientProvider"
     }).collect(Collectors.toSet());
 
     @BuildStep
