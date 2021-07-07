@@ -41,7 +41,6 @@ public final class ReflectiveHierarchyBuildItem extends MultiBuildItem {
     private final Predicate<FieldInfo> ignoreFieldPredicate;
     private final Predicate<MethodInfo> ignoreMethodPredicate;
     private final String source;
-    private final boolean serialization;
 
     /**
      * @deprecated Use the Builder instead.
@@ -105,19 +104,17 @@ public final class ReflectiveHierarchyBuildItem extends MultiBuildItem {
     @Deprecated
     public ReflectiveHierarchyBuildItem(Type type, IndexView index, Predicate<DotName> ignoreTypePredicate, String source) {
         this(type, index, ignoreTypePredicate, DefaultIgnoreFieldPredicate.INSTANCE, DefaultIgnoreMethodPredicate.INSTANCE,
-                source, false);
+                source);
     }
 
     private ReflectiveHierarchyBuildItem(Type type, IndexView index, Predicate<DotName> ignoreTypePredicate,
-            Predicate<FieldInfo> ignoreFieldPredicate, Predicate<MethodInfo> ignoreMethodPredicate, String source,
-            boolean serialization) {
+            Predicate<FieldInfo> ignoreFieldPredicate, Predicate<MethodInfo> ignoreMethodPredicate, String source) {
         this.type = type;
         this.index = index;
         this.ignoreTypePredicate = ignoreTypePredicate;
         this.ignoreFieldPredicate = ignoreFieldPredicate;
         this.ignoreMethodPredicate = ignoreMethodPredicate;
         this.source = source;
-        this.serialization = serialization;
     }
 
     public Type getType() {
@@ -144,10 +141,6 @@ public final class ReflectiveHierarchyBuildItem extends MultiBuildItem {
         return source != null;
     }
 
-    public boolean isSerialization() {
-        return serialization;
-    }
-
     public String getSource() {
         return source;
     }
@@ -160,7 +153,6 @@ public final class ReflectiveHierarchyBuildItem extends MultiBuildItem {
         private Predicate<FieldInfo> ignoreFieldPredicate = DefaultIgnoreFieldPredicate.INSTANCE;
         private Predicate<MethodInfo> ignoreMethodPredicate = DefaultIgnoreMethodPredicate.INSTANCE;
         private String source = UNKNOWN_SOURCE;
-        private boolean serialization;
 
         public Builder type(Type type) {
             this.type = type;
@@ -192,14 +184,9 @@ public final class ReflectiveHierarchyBuildItem extends MultiBuildItem {
             return this;
         }
 
-        public Builder serialization(boolean serialization) {
-            this.serialization = serialization;
-            return this;
-        }
-
         public ReflectiveHierarchyBuildItem build() {
             return new ReflectiveHierarchyBuildItem(type, index, ignoreTypePredicate, ignoreFieldPredicate,
-                    ignoreMethodPredicate, source, serialization);
+                    ignoreMethodPredicate, source);
         }
     }
 

@@ -30,7 +30,6 @@ public class RegisterForReflectionBuildStep {
             boolean methods = getBooleanValue(i, "methods");
             boolean fields = getBooleanValue(i, "fields");
             boolean ignoreNested = getBooleanValue(i, "ignoreNested");
-            boolean serialization = i.value("serialization") != null && i.value("serialization").asBoolean();
 
             AnnotationValue targetsValue = i.value("targets");
             AnnotationValue classNamesValue = i.value("classNames");
@@ -38,23 +37,21 @@ public class RegisterForReflectionBuildStep {
             ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
             if (targetsValue == null && classNamesValue == null) {
                 ClassInfo classInfo = i.target().asClass();
-                registerClass(classLoader, classInfo.name().toString(), methods, fields, ignoreNested, serialization,
-                        reflectiveClass);
+                registerClass(classLoader, classInfo.name().toString(), methods, fields, ignoreNested, reflectiveClass);
                 continue;
             }
 
             if (targetsValue != null) {
                 Type[] targets = targetsValue.asClassArray();
                 for (Type type : targets) {
-                    registerClass(classLoader, type.name().toString(), methods, fields, ignoreNested, serialization,
-                            reflectiveClass);
+                    registerClass(classLoader, type.name().toString(), methods, fields, ignoreNested, reflectiveClass);
                 }
             }
 
             if (classNamesValue != null) {
                 String[] classNames = classNamesValue.asStringArray();
                 for (String className : classNames) {
-                    registerClass(classLoader, className, methods, fields, ignoreNested, serialization, reflectiveClass);
+                    registerClass(classLoader, className, methods, fields, ignoreNested, reflectiveClass);
                 }
             }
         }
@@ -64,9 +61,8 @@ public class RegisterForReflectionBuildStep {
      * BFS Recursive Method to register a class and it's inner classes for Reflection.
      */
     private void registerClass(ClassLoader classLoader, String className, boolean methods, boolean fields,
-            boolean ignoreNested, boolean serialization, final BuildProducer<ReflectiveClassBuildItem> reflectiveClass) {
-        reflectiveClass.produce(serialization ? ReflectiveClassBuildItem.serializationClass(className)
-                : new ReflectiveClassBuildItem(methods, fields, className));
+            boolean ignoreNested, final BuildProducer<ReflectiveClassBuildItem> reflectiveClass) {
+        reflectiveClass.produce(new ReflectiveClassBuildItem(methods, fields, className));
 
         if (ignoreNested) {
             return;
@@ -75,7 +71,7 @@ public class RegisterForReflectionBuildStep {
         try {
             Class<?>[] declaredClasses = classLoader.loadClass(className).getDeclaredClasses();
             for (Class<?> clazz : declaredClasses) {
-                registerClass(classLoader, clazz.getName(), methods, fields, false, serialization, reflectiveClass);
+                registerClass(classLoader, clazz.getName(), methods, fields, false, reflectiveClass);
             }
         } catch (ClassNotFoundException e) {
             log.warnf(e, "Failed to load Class %s", className);

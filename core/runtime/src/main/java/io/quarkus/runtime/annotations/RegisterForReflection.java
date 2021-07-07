@@ -43,6 +43,4 @@ public @interface RegisterForReflection {
      * register private classes for Reflection.
      */
     String[] classNames() default {};
-
-    boolean serialization() default false;
 }

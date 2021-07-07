@@ -197,7 +197,6 @@ public class ReflectiveHierarchyStep {
                         .methods(true)
                         .fields(true)
                         .finalFieldsWritable(doFinalFieldsNeedToBeWritable(info, finalFieldsWritable))
-                        .serialization(reflectiveHierarchyBuildItem.isSerialization())
                         .build());
 
         processedReflectiveHierarchies.add(name);
