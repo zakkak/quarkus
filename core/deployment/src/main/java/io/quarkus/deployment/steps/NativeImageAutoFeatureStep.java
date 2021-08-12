@@ -532,16 +532,6 @@ public class NativeImageAutoFeatureStep {
 
         TryBlock tc = graalVm21Test.trueBranch().tryBlock();
 
-        ResultHandle currentThread = tc
-                .invokeStaticMethod(ofMethod(Thread.class, "currentThread", Thread.class));
-        ResultHandle tccl = tc.invokeVirtualMethod(
-                ofMethod(Thread.class, "getContextClassLoader", ClassLoader.class),
-                currentThread);
-
-        ResultHandle objectClass = tc.invokeStaticMethod(
-                ofMethod(Class.class, "forName", Class.class, String.class, boolean.class, ClassLoader.class),
-                tc.load("java.lang.Object"), tc.load(false), tccl);
-
         ResultHandle serializationSupport = tc.invokeStaticMethod(
                 IMAGE_SINGLETONS_LOOKUP,
                 tc.loadClass("com.oracle.svm.core.jdk.serialize.SerializationRegistry"));
@@ -551,9 +541,7 @@ public class NativeImageAutoFeatureStep {
 
         AssignableResultHandle newSerializationConstructor = tc.createVariable(Constructor.class);
 
-        ResultHandle externalizableClass = tc.invokeStaticMethod(
-                ofMethod(Class.class, "forName", Class.class, String.class, boolean.class, ClassLoader.class),
-                tc.load("java.io.Externalizable"), tc.load(false), tccl);
+        ResultHandle externalizableClass = tc.loadClass("java.io.Externalizable");
 
         BranchResult isExternalizable = tc
                 .ifTrue(tc.invokeVirtualMethod(ofMethod(Class.class, "isAssignableFrom", boolean.class, Class.class),
@@ -561,9 +549,7 @@ public class NativeImageAutoFeatureStep {
         BytecodeCreator ifIsExternalizable = isExternalizable.trueBranch();
 
         ResultHandle array1 = ifIsExternalizable.newArray(Class.class, tc.load(1));
-        ResultHandle classClass = ifIsExternalizable.invokeStaticMethod(
-                ofMethod(Class.class, "forName", Class.class, String.class, boolean.class, ClassLoader.class),
-                ifIsExternalizable.load("java.lang.Class"), ifIsExternalizable.load(false), tccl);
+        ResultHandle classClass = ifIsExternalizable.loadClass("java.lang.Class");
         ifIsExternalizable.writeArrayValue(array1, 0, classClass);
 
         ResultHandle externalizableLookupMethod = ifIsExternalizable.invokeStaticMethod(
@@ -637,7 +623,7 @@ public class NativeImageAutoFeatureStep {
         tc.invokeStaticMethod(
                 ofMethod("com.oracle.svm.reflect.serialize.hosted.SerializationFeature", "addReflections", void.class,
                         Class.class, Class.class),
-                clazz, objectClass);
+                clazz, tc.loadClass("java.lang.Object"));
 
         addSerializationForClass.returnValue(null);
 
