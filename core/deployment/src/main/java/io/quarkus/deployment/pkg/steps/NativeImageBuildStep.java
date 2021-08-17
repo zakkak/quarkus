@@ -638,7 +638,12 @@ public class NativeImageBuildStep {
                     nativeImageArgs.add("--enable-all-security-services");
                 }
                 if (inlineBeforeAnalysis) {
-                    if (graalVMVersion.isNewerThan(GraalVM.Version.VERSION_20_3)) {
+                    if (graalVMVersion.isNewerThan(GraalVM.Version.VERSION_21_2)) {
+                        log.warn("Your application is setting the deprecated 'quarkus.native.inline-before-analysis"
+                                        + " configuration key to true. Please consider removing this configuration key"
+                                        + " as it is ignored (InlineBeforeAnalysis is always enabled) and it will be"
+                                        + " removed in a future Quarkus version.");
+                    } else if (graalVMVersion.isNewerThan(GraalVM.Version.VERSION_20_3)) {
                         nativeImageArgs.add("-H:+InlineBeforeAnalysis");
                     } else {
                         log.warn(
