@@ -690,6 +690,10 @@ public class NativeImageBuildStep {
                     nativeImageArgs.add("-H:+DashboardAll");
                 }
 
+                // Disable single parsing of compiler graphs till the impact of it on heap usage decreases
+                // see https://github.com/oracle/graal/issues/3435 and https://github.com/graalvm/mandrel/issues/304#issuecomment-952070568
+                nativeImageArgs.add("-H:-ParseOnce");
+
                 if (nativeImageSecurityProviders != null && !nativeImageSecurityProviders.isEmpty()) {
                     String additionalSecurityProviders = nativeImageSecurityProviders.stream()
                             .map(p -> p.getSecurityProvider())
