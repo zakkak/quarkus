@@ -1,5 +1,7 @@
 package io.quarkus.security.deployment;
 
+import static io.quarkus.security.runtime.SecurityProviderUtils.findProviderIndex;
+
 import java.io.IOException;
 import java.lang.reflect.Modifier;
 import java.net.MalformedURLException;
@@ -42,12 +44,15 @@ import io.quarkus.deployment.annotations.ExecutionTime;
 import io.quarkus.deployment.annotations.Record;
 import io.quarkus.deployment.builditem.ApplicationClassPredicateBuildItem;
 import io.quarkus.deployment.builditem.FeatureBuildItem;
+import io.quarkus.deployment.builditem.nativeimage.AutoFeatureAugmentor;
 import io.quarkus.deployment.builditem.nativeimage.JPMSExportBuildItem;
+import io.quarkus.deployment.builditem.nativeimage.NativeImageAutoFeatureAugmentorBuildItem;
 import io.quarkus.deployment.builditem.nativeimage.NativeImageSecurityProviderBuildItem;
 import io.quarkus.deployment.builditem.nativeimage.ReflectiveClassBuildItem;
 import io.quarkus.deployment.builditem.nativeimage.RuntimeReinitializedClassBuildItem;
 import io.quarkus.gizmo.MethodDescriptor;
 import io.quarkus.gizmo.ResultHandle;
+import io.quarkus.gizmo.TryBlock;
 import io.quarkus.runtime.RuntimeValue;
 import io.quarkus.security.runtime.IdentityProviderManagerCreator;
 import io.quarkus.security.runtime.SecurityBuildTimeConfig;
@@ -149,10 +154,15 @@ public class SecurityProcessor {
                 isFipsMode ? SecurityProviderUtils.BOUNCYCASTLE_FIPS_PROVIDER_CLASS_NAME
                         : SecurityProviderUtils.BOUNCYCASTLE_PROVIDER_CLASS_NAME));
         reflection.produce(new ReflectiveClassBuildItem(true, true,
+                "org.bouncycastle.jcajce.provider.symmetric.AES",
+                "org.bouncycastle.jcajce.provider.symmetric.AES$CBC",
+                "org.bouncycastle.crypto.paddings.PKCS7Padding",
                 "org.bouncycastle.jcajce.provider.asymmetric.ec.KeyFactorySpi",
                 "org.bouncycastle.jcajce.provider.asymmetric.ec.KeyFactorySpi$EC",
+                "org.bouncycastle.jcajce.provider.asymmetric.ec.KeyFactorySpi$ECDSA",
                 "org.bouncycastle.jcajce.provider.asymmetric.ec.KeyPairGeneratorSpi",
                 "org.bouncycastle.jcajce.provider.asymmetric.ec.KeyPairGeneratorSpi$EC",
+                "org.bouncycastle.jcajce.provider.asymmetric.ec.KeyPairGeneratorSpi$ECDSA",
                 "org.bouncycastle.jcajce.provider.asymmetric.rsa.KeyFactorySpi",
                 "org.bouncycastle.jcajce.provider.asymmetric.rsa.KeyPairGeneratorSpi",
                 "org.bouncycastle.jcajce.provider.asymmetric.rsa.PSSSignatureSpi",
@@ -222,23 +232,52 @@ public class SecurityProcessor {
 
     @BuildStep
     void addBouncyCastleProvidersToNativeImage(BuildProducer<NativeImageSecurityProviderBuildItem> additionalProviders,
+            BuildProducer<NativeImageAutoFeatureAugmentorBuildItem> autoFeatureAugmentors,
             List<BouncyCastleProviderBuildItem> bouncyCastleProviders,
             List<BouncyCastleJsseProviderBuildItem> bouncyCastleJsseProviders) {
         Optional<BouncyCastleJsseProviderBuildItem> bouncyCastleJsseProvider = getOne(bouncyCastleJsseProviders);
         if (bouncyCastleJsseProvider.isPresent()) {
             additionalProviders.produce(
                     new NativeImageSecurityProviderBuildItem(SecurityProviderUtils.BOUNCYCASTLE_JSSE_PROVIDER_CLASS_NAME));
-            final String providerName = bouncyCastleJsseProvider.get().isInFipsMode()
-                    ? SecurityProviderUtils.BOUNCYCASTLE_FIPS_PROVIDER_CLASS_NAME
-                    : SecurityProviderUtils.BOUNCYCASTLE_PROVIDER_CLASS_NAME;
-            additionalProviders.produce(new NativeImageSecurityProviderBuildItem(providerName));
+
+            autoFeatureAugmentors.produce(new NativeImageAutoFeatureAugmentorBuildItem(new AutoFeatureAugmentor() {
+                @Override
+                public void augment(TryBlock overallCatch) {
+                    final int sunJsseIndex = findProviderIndex(SecurityProviderUtils.SUN_JSSE_PROVIDER_NAME);
+
+                    final String commonProviderName = bouncyCastleJsseProvider.get().isInFipsMode()
+                            ? SecurityProviderUtils.BOUNCYCASTLE_FIPS_PROVIDER_CLASS_NAME
+                            : SecurityProviderUtils.BOUNCYCASTLE_PROVIDER_CLASS_NAME;
+
+                    ResultHandle bcCommonProvider = overallCatch
+                            .newInstance(MethodDescriptor.ofConstructor(commonProviderName));
+                    ResultHandle bcJsseProvider = overallCatch.newInstance(
+                            MethodDescriptor.ofConstructor(SecurityProviderUtils.BOUNCYCASTLE_JSSE_PROVIDER_CLASS_NAME));
+
+                    overallCatch.invokeStaticMethod(
+                            MethodDescriptor.ofMethod(Security.class, "insertProviderAt", int.class, Provider.class, int.class),
+                            bcCommonProvider, overallCatch.load(sunJsseIndex));
+                    overallCatch.invokeStaticMethod(
+                            MethodDescriptor.ofMethod(Security.class, "insertProviderAt", int.class, Provider.class, int.class),
+                            bcJsseProvider, overallCatch.load(sunJsseIndex + 1));
+                }
+            }));
         } else {
             Optional<BouncyCastleProviderBuildItem> bouncyCastleProvider = getOne(bouncyCastleProviders);
             if (bouncyCastleProvider.isPresent()) {
                 final String providerName = bouncyCastleProvider.get().isInFipsMode()
                         ? SecurityProviderUtils.BOUNCYCASTLE_FIPS_PROVIDER_CLASS_NAME
                         : SecurityProviderUtils.BOUNCYCASTLE_PROVIDER_CLASS_NAME;
-                additionalProviders.produce(new NativeImageSecurityProviderBuildItem(providerName));
+
+                autoFeatureAugmentors.produce(new NativeImageAutoFeatureAugmentorBuildItem(new AutoFeatureAugmentor() {
+                    @Override
+                    public void augment(TryBlock overallCatch) {
+                        ResultHandle bcProvider = overallCatch.newInstance(MethodDescriptor.ofConstructor(providerName));
+                        overallCatch.invokeStaticMethod(
+                                MethodDescriptor.ofMethod(Security.class, "addProvider", int.class, Provider.class),
+                                bcProvider);
+                    }
+                }));
             }
         }
     }

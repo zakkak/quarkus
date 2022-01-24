@@ -28,6 +28,7 @@ import io.quarkus.deployment.builditem.GeneratedNativeImageClassBuildItem;
 import io.quarkus.deployment.builditem.GeneratedResourceBuildItem;
 import io.quarkus.deployment.builditem.nativeimage.ForceNonWeakReflectiveClassBuildItem;
 import io.quarkus.deployment.builditem.nativeimage.JniRuntimeAccessBuildItem;
+import io.quarkus.deployment.builditem.nativeimage.NativeImageAutoFeatureAugmentorBuildItem;
 import io.quarkus.deployment.builditem.nativeimage.NativeImageProxyDefinitionBuildItem;
 import io.quarkus.deployment.builditem.nativeimage.NativeImageResourceBuildItem;
 import io.quarkus.deployment.builditem.nativeimage.NativeImageResourceBundleBuildItem;
@@ -114,6 +115,7 @@ public class NativeImageAutoFeatureStep {
             List<NativeImageProxyDefinitionBuildItem> proxies,
             List<NativeImageResourcePatternsBuildItem> resourcePatterns,
             List<NativeImageResourceBundleBuildItem> resourceBundles,
+            List<NativeImageAutoFeatureAugmentorBuildItem> augmentors,
             List<ReflectiveMethodBuildItem> reflectiveMethods,
             List<ReflectiveFieldBuildItem> reflectiveFields,
             List<ReflectiveClassBuildItem> reflectiveClassBuildItems,
@@ -337,6 +339,11 @@ public class NativeImageAutoFeatureStep {
                 //c.invokeVirtualMethod(ofMethod(Throwable.class, "printStackTrace", void.class), c.getCaughtException());
             }
         }
+
+        for (NativeImageAutoFeatureAugmentorBuildItem augmentor : augmentors) {
+            augmentor.augment(overallCatch);
+        }
+
         int count = 0;
 
         final Map<String, ReflectionInfo> reflectiveClasses = new LinkedHashMap<>();
