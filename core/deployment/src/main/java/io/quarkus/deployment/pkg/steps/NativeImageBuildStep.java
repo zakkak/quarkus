@@ -691,6 +691,7 @@ public class NativeImageBuildStep {
                 }
                 if (nativeConfig.enableReports) {
                     nativeImageArgs.add("-H:+PrintAnalysisCallTree");
+                    nativeImageArgs.add("--diagnostics-mode");
                 }
                 if (nativeConfig.dumpProxies) {
                     nativeImageArgs.add("-Dsun.misc.ProxyGenerator.saveGeneratedFiles=true");
