@@ -41,8 +41,7 @@ public class BouncyCastleFipsJsseTestCase {
     @TestHTTPResource(ssl = true)
     URL url;
 
-    @Inject
-    Vertx vertx;
+    Vertx vertx= Vertx.vertx();
 
     @Test
     public void testListProviders() throws Exception {
