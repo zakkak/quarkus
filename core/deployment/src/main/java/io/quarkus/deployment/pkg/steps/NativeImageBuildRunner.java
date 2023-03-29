@@ -21,6 +21,28 @@ public abstract class NativeImageBuildRunner {
 
     private static final Logger log = Logger.getLogger(NativeImageBuildRunner.class);
 
+    /**
+     * The point of this factory is to represent the resolved runner type and parameters,
+     * so that it can be resolved early and the runner type taken into account in build steps
+     * that are needed for the eventual build.
+     * In particular, we sometimes need to determine whether the build is in-container or not
+     * to produce build items that will be consumed during the build.
+     */
+    public interface Factory {
+        NativeImageBuildRunner create(Path outputDir, String nativeImageName);
+
+        boolean isContainerBuild();
+
+        default String getResultingExecutableName(String nativeImageName) {
+            String resultingExecutableName = nativeImageName;
+            if (SystemUtils.IS_OS_WINDOWS && !isContainerBuild()) {
+                //once image is generated it gets added .exe on Windows
+                resultingExecutableName = resultingExecutableName + ".exe";
+            }
+            return resultingExecutableName;
+        }
+    }
+
     public GraalVM.Version getGraalVMVersion() {
         final GraalVM.Version graalVMVersion;
         try {

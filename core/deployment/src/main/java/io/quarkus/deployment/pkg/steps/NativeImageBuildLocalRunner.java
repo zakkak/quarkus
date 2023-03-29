@@ -1,6 +1,7 @@
 package io.quarkus.deployment.pkg.steps;
 
 import java.io.File;
+import java.nio.file.Path;
 import java.util.List;
 import java.util.stream.Stream;
 
@@ -8,11 +9,29 @@ import org.apache.commons.lang3.SystemUtils;
 
 public class NativeImageBuildLocalRunner extends NativeImageBuildRunner {
 
+    public static class Factory implements NativeImageBuildRunner.Factory {
+        private final String nativeImageExecutable;
+
+        public Factory(String nativeImageExecutable) {
+            this.nativeImageExecutable = nativeImageExecutable;
+        }
+
+        @Override
+        public NativeImageBuildRunner create(Path outputDir, String nativeImageName) {
+            return new NativeImageBuildLocalRunner(this, outputDir.toFile());
+        }
+
+        @Override
+        public boolean isContainerBuild() {
+            return false;
+        }
+    }
+
     private final String nativeImageExecutable;
     private final File workingDirectory;
 
-    public NativeImageBuildLocalRunner(String nativeImageExecutable, File workingDirectory) {
-        this.nativeImageExecutable = nativeImageExecutable;
+    private NativeImageBuildLocalRunner(Factory factory, File workingDirectory) {
+        this.nativeImageExecutable = factory.nativeImageExecutable;
         this.workingDirectory = workingDirectory;
     }
 

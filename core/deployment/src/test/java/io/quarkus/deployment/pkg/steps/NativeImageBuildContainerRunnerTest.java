@@ -27,7 +27,7 @@ class NativeImageBuildContainerRunnerTest {
         String[] command;
 
         nativeConfig.builderImage = "graalvm";
-        localRunner = new NativeImageBuildLocalContainerRunner(nativeConfig, Path.of("/tmp"));
+        localRunner = new NativeImageBuildLocalContainerRunner.Factory(nativeConfig).create(Path.of("/tmp"), null);
         command = localRunner.buildCommand(containerRuntime.getExecutableName(), Collections.emptyList(),
                 Collections.emptyList());
         found = false;
@@ -40,7 +40,7 @@ class NativeImageBuildContainerRunnerTest {
         assertThat(found).isTrue();
 
         nativeConfig.builderImage = "mandrel";
-        localRunner = new NativeImageBuildLocalContainerRunner(nativeConfig, Path.of("/tmp"));
+        localRunner = new NativeImageBuildLocalContainerRunner.Factory(nativeConfig).create(Path.of("/tmp"), null);
         command = localRunner.buildCommand(containerRuntime.getExecutableName(), Collections.emptyList(),
                 Collections.emptyList());
         found = false;
@@ -53,7 +53,7 @@ class NativeImageBuildContainerRunnerTest {
         assertThat(found).isTrue();
 
         nativeConfig.builderImage = "RandomString";
-        localRunner = new NativeImageBuildLocalContainerRunner(nativeConfig, Path.of("/tmp"));
+        localRunner = new NativeImageBuildLocalContainerRunner.Factory(nativeConfig).create(Path.of("/tmp"), null);
         command = localRunner.buildCommand(containerRuntime.getExecutableName(), Collections.emptyList(),
                 Collections.emptyList());
         found = false;

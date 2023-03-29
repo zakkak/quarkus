@@ -21,14 +21,30 @@ public abstract class NativeImageBuildContainerRunner extends NativeImageBuildRu
 
     private static final Logger log = Logger.getLogger(NativeImageBuildContainerRunner.class);
 
+    public static abstract class Factory implements NativeImageBuildRunner.Factory {
+        protected final NativeConfig nativeConfig;
+
+        public Factory(NativeConfig nativeConfig) {
+            this.nativeConfig = nativeConfig;
+        }
+
+        @Override
+        public abstract NativeImageBuildContainerRunner create(Path outputDir, String nativeImageName);
+
+        @Override
+        public boolean isContainerBuild() {
+            return true;
+        }
+    }
+
     final NativeConfig nativeConfig;
     protected final ContainerRuntimeUtil.ContainerRuntime containerRuntime;
     String[] baseContainerRuntimeArgs;
     protected final String outputPath;
     private final String containerName;
 
-    public NativeImageBuildContainerRunner(NativeConfig nativeConfig, Path outputDir) {
-        this.nativeConfig = nativeConfig;
+    protected NativeImageBuildContainerRunner(Factory factory, Path outputDir) {
+        this.nativeConfig = factory.nativeConfig;
         containerRuntime = nativeConfig.containerRuntime.orElseGet(ContainerRuntimeUtil::detectContainerRuntime);
         log.infof("Using %s to run the native image builder", containerRuntime.getExecutableName());
 

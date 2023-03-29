@@ -20,13 +20,25 @@ public class NativeImageBuildRemoteContainerRunner extends NativeImageBuildConta
     // issue https://github.com/containers/podman/issues/9608
     private static final String CONTAINER_BUILD_VOLUME_NAME = "quarkus-native-builder-image-project-volume";
 
+    public static class Factory extends NativeImageBuildContainerRunner.Factory {
+        public Factory(NativeConfig nativeConfig) {
+            super(nativeConfig);
+        }
+
+        @Override
+        public NativeImageBuildRemoteContainerRunner create(Path outputDir, String nativeImageName) {
+            return new NativeImageBuildRemoteContainerRunner(this, outputDir, nativeImageName,
+                    getResultingExecutableName(nativeImageName));
+        }
+    }
+
     private final String nativeImageName;
     private final String resultingExecutableName;
     private String containerId;
 
-    public NativeImageBuildRemoteContainerRunner(NativeConfig nativeConfig, Path outputDir,
-            String nativeImageName, String resultingExecutableName) {
-        super(nativeConfig, outputDir);
+    private NativeImageBuildRemoteContainerRunner(Factory factory, Path outputDir, String nativeImageName,
+            String resultingExecutableName) {
+        super(factory, outputDir);
         this.nativeImageName = nativeImageName;
         this.resultingExecutableName = resultingExecutableName;
     }

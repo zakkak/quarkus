@@ -31,7 +31,7 @@ import io.quarkus.deployment.builditem.nativeimage.JniRuntimeAccessBuildItem;
 import io.quarkus.deployment.builditem.nativeimage.NativeImageResourceBuildItem;
 import io.quarkus.deployment.builditem.nativeimage.ReflectiveClassBuildItem;
 import io.quarkus.deployment.builditem.nativeimage.RuntimeReinitializedClassBuildItem;
-import io.quarkus.deployment.pkg.NativeConfig;
+import io.quarkus.deployment.pkg.builditem.NativeImageRunnerFactoryBuildItem;
 import io.quarkus.kafka.streams.runtime.KafkaStreamsProducer;
 import io.quarkus.kafka.streams.runtime.KafkaStreamsRecorder;
 import io.quarkus.kafka.streams.runtime.KafkaStreamsRuntimeConfig;
@@ -49,13 +49,13 @@ class KafkaStreamsProcessor {
             BuildProducer<RuntimeReinitializedClassBuildItem> reinitialized,
             BuildProducer<NativeImageResourceBuildItem> nativeLibs,
             LaunchModeBuildItem launchMode,
-            NativeConfig config) throws IOException {
+            NativeImageRunnerFactoryBuildItem nativeImageRunnerFactory) throws IOException {
 
         feature.produce(new FeatureBuildItem(Feature.KAFKA_STREAMS));
 
         registerClassesThatAreLoadedThroughReflection(reflectiveClasses, launchMode);
         registerClassesThatAreAccessedViaJni(jniRuntimeAccessibleClasses);
-        addSupportForRocksDbLib(nativeLibs, config);
+        addSupportForRocksDbLib(nativeLibs, nativeImageRunnerFactory);
         enableLoadOfNativeLibs(reinitialized);
     }
 
@@ -138,9 +138,10 @@ class KafkaStreamsProcessor {
                 .produce(new JniRuntimeAccessBuildItem(true, false, false, RocksDBException.class, Status.class));
     }
 
-    private void addSupportForRocksDbLib(BuildProducer<NativeImageResourceBuildItem> nativeLibs, NativeConfig nativeConfig) {
+    private void addSupportForRocksDbLib(BuildProducer<NativeImageResourceBuildItem> nativeLibs,
+            NativeImageRunnerFactoryBuildItem nativeImageRunnerFactory) {
         // for RocksDB, either add linux64 native lib when targeting containers
-        if (nativeConfig.isContainerBuild()) {
+        if (nativeImageRunnerFactory.isContainerBuild()) {
             nativeLibs.produce(new NativeImageResourceBuildItem("librocksdbjni-linux64.so"));
         }
         // otherwise the native lib of the platform this build runs on

@@ -17,8 +17,19 @@ import io.quarkus.deployment.util.FileUtil;
 
 public class NativeImageBuildLocalContainerRunner extends NativeImageBuildContainerRunner {
 
-    public NativeImageBuildLocalContainerRunner(NativeConfig nativeConfig, Path outputDir) {
-        super(nativeConfig, outputDir);
+    public static class Factory extends NativeImageBuildContainerRunner.Factory {
+        public Factory(NativeConfig nativeConfig) {
+            super(nativeConfig);
+        }
+
+        @Override
+        public NativeImageBuildLocalContainerRunner create(Path outputDir, String nativeImageName) {
+            return new NativeImageBuildLocalContainerRunner(this, outputDir);
+        }
+    }
+
+    private NativeImageBuildLocalContainerRunner(Factory factory, Path outputDir) {
+        super(factory, outputDir);
         if (SystemUtils.IS_OS_LINUX) {
             final ArrayList<String> containerRuntimeArgs = new ArrayList<>(Arrays.asList(baseContainerRuntimeArgs));
             if (containerRuntime == DOCKER && containerRuntime.isRootless()) {
