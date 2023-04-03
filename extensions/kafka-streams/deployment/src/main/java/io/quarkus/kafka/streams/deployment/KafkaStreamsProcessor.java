@@ -31,7 +31,7 @@ import io.quarkus.deployment.builditem.nativeimage.JniRuntimeAccessBuildItem;
 import io.quarkus.deployment.builditem.nativeimage.NativeImageResourceBuildItem;
 import io.quarkus.deployment.builditem.nativeimage.ReflectiveClassBuildItem;
 import io.quarkus.deployment.builditem.nativeimage.RuntimeReinitializedClassBuildItem;
-import io.quarkus.deployment.pkg.builditem.NativeImageRunnerFactoryBuildItem;
+import io.quarkus.deployment.pkg.builditem.NativeImageRunnerBuildItem;
 import io.quarkus.kafka.streams.runtime.KafkaStreamsProducer;
 import io.quarkus.kafka.streams.runtime.KafkaStreamsRecorder;
 import io.quarkus.kafka.streams.runtime.KafkaStreamsRuntimeConfig;
@@ -49,13 +49,13 @@ class KafkaStreamsProcessor {
             BuildProducer<RuntimeReinitializedClassBuildItem> reinitialized,
             BuildProducer<NativeImageResourceBuildItem> nativeLibs,
             LaunchModeBuildItem launchMode,
-            NativeImageRunnerFactoryBuildItem nativeImageRunnerFactory) throws IOException {
+            NativeImageRunnerBuildItem nativeImageRunner) throws IOException {
 
         feature.produce(new FeatureBuildItem(Feature.KAFKA_STREAMS));
 
         registerClassesThatAreLoadedThroughReflection(reflectiveClasses, launchMode);
         registerClassesThatAreAccessedViaJni(jniRuntimeAccessibleClasses);
-        addSupportForRocksDbLib(nativeLibs, nativeImageRunnerFactory);
+        addSupportForRocksDbLib(nativeLibs, nativeImageRunner);
         enableLoadOfNativeLibs(reinitialized);
     }
 
@@ -139,7 +139,7 @@ class KafkaStreamsProcessor {
     }
 
     private void addSupportForRocksDbLib(BuildProducer<NativeImageResourceBuildItem> nativeLibs,
-            NativeImageRunnerFactoryBuildItem nativeImageRunnerFactory) {
+            NativeImageRunnerBuildItem nativeImageRunnerFactory) {
         // for RocksDB, either add linux64 native lib when targeting containers
         if (nativeImageRunnerFactory.isContainerBuild()) {
             nativeLibs.produce(new NativeImageResourceBuildItem("librocksdbjni-linux64.so"));

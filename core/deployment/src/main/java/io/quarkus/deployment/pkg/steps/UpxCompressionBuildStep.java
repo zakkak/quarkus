@@ -19,7 +19,7 @@ import io.quarkus.deployment.annotations.BuildStep;
 import io.quarkus.deployment.pkg.NativeConfig;
 import io.quarkus.deployment.pkg.builditem.ArtifactResultBuildItem;
 import io.quarkus.deployment.pkg.builditem.NativeImageBuildItem;
-import io.quarkus.deployment.pkg.builditem.NativeImageRunnerFactoryBuildItem;
+import io.quarkus.deployment.pkg.builditem.NativeImageRunnerBuildItem;
 import io.quarkus.deployment.pkg.builditem.UpxCompressedBuildItem;
 import io.quarkus.deployment.util.FileUtil;
 import io.quarkus.deployment.util.ProcessUtil;
@@ -35,7 +35,7 @@ public class UpxCompressionBuildStep {
     private static final String PATH = "PATH";
 
     @BuildStep(onlyIf = NativeBuild.class)
-    public void compress(NativeConfig nativeConfig, NativeImageRunnerFactoryBuildItem nativeImageRunnerFactory,
+    public void compress(NativeConfig nativeConfig, NativeImageRunnerBuildItem nativeImageRunner,
             NativeImageBuildItem image,
             BuildProducer<UpxCompressedBuildItem> upxCompressedProducer,
             BuildProducer<ArtifactResultBuildItem> artifactResultProducer) {
@@ -51,7 +51,7 @@ public class UpxCompressionBuildStep {
             if (!runUpxFromHost(upxPathFromSystem.get(), image.getPath().toFile(), nativeConfig)) {
                 throw new IllegalStateException("Unable to compress the native executable");
             }
-        } else if (nativeImageRunnerFactory.isContainerBuild()) {
+        } else if (nativeImageRunner.isContainerBuild()) {
             log.infof("Running UPX from a container using the builder image: " + effectiveBuilderImage);
             if (!runUpxInContainer(image, nativeConfig, effectiveBuilderImage)) {
                 throw new IllegalStateException("Unable to compress the native executable");

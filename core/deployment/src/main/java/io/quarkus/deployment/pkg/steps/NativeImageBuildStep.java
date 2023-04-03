@@ -42,7 +42,7 @@ import io.quarkus.deployment.pkg.builditem.ArtifactResultBuildItem;
 import io.quarkus.deployment.pkg.builditem.BuildSystemTargetBuildItem;
 import io.quarkus.deployment.pkg.builditem.CurateOutcomeBuildItem;
 import io.quarkus.deployment.pkg.builditem.NativeImageBuildItem;
-import io.quarkus.deployment.pkg.builditem.NativeImageRunnerFactoryBuildItem;
+import io.quarkus.deployment.pkg.builditem.NativeImageRunnerBuildItem;
 import io.quarkus.deployment.pkg.builditem.NativeImageSourceJarBuildItem;
 import io.quarkus.deployment.pkg.builditem.OutputTargetBuildItem;
 import io.quarkus.deployment.pkg.builditem.ProcessInheritIODisabled;
@@ -111,7 +111,7 @@ public class NativeImageBuildStep {
             List<JPMSExportBuildItem> jpmsExportBuildItems,
             List<NativeImageSecurityProviderBuildItem> nativeImageSecurityProviders,
             List<NativeImageFeatureBuildItem> nativeImageFeatures,
-            NativeImageRunnerFactoryBuildItem nativeImageRunnerFactory) {
+            NativeImageRunnerBuildItem nativeImageRunner) {
 
         Path outputDir;
         try {
@@ -142,7 +142,7 @@ public class NativeImageBuildStep {
                 .setNativeImageName(nativeImageName)
                 .setGraalVMVersion(GraalVM.Version.CURRENT)
                 .setNativeImageFeatures(nativeImageFeatures)
-                .setContainerBuild(nativeImageRunnerFactory.isContainerBuild())
+                .setContainerBuild(nativeImageRunner.isContainerBuild())
                 .build();
         List<String> command = nativeImageArgs.getArgs();
         try (FileOutputStream commandFOS = new FileOutputStream(outputDir.resolve("native-image.args").toFile())) {
@@ -179,7 +179,7 @@ public class NativeImageBuildStep {
             Optional<ProcessInheritIODisabled> processInheritIODisabled,
             Optional<ProcessInheritIODisabledBuildItem> processInheritIODisabledBuildItem,
             List<NativeImageFeatureBuildItem> nativeImageFeatures,
-            NativeImageRunnerFactoryBuildItem nativeImageRunnerFactory) {
+            NativeImageRunnerBuildItem nativeImageRunner) {
         if (nativeConfig.debug.enabled) {
             copyJarSourcesToLib(outputTargetBuildItem, curateOutcomeBuildItem);
             copySourcesToSourceCache(outputTargetBuildItem);
@@ -192,14 +192,13 @@ public class NativeImageBuildStep {
 
         String noPIE = "";
 
-        boolean isContainerBuild = nativeImageRunnerFactory.isContainerBuild();
+        boolean isContainerBuild = nativeImageRunner.isContainerBuild();
         if (!isContainerBuild && SystemUtils.IS_OS_LINUX) {
             noPIE = detectNoPIE();
         }
 
-        var buildRunnerFactory = nativeImageRunnerFactory.getBuildRunnerFactory();
         String nativeImageName = getNativeImageName(outputTargetBuildItem, packageConfig);
-        String resultingExecutableName = buildRunnerFactory.getResultingExecutableName(nativeImageName);
+        String resultingExecutableName = getResultingExecutableName(nativeImageName, nativeImageRunner.isContainerBuild());
         Path generatedExecutablePath = outputDir.resolve(resultingExecutableName);
         Path finalExecutablePath = outputTargetBuildItem.getOutputDirectory().resolve(resultingExecutableName);
         if (nativeConfig.reuseExisting) {
@@ -209,7 +208,7 @@ public class NativeImageBuildStep {
             }
         }
 
-        NativeImageBuildRunner buildRunner = buildRunnerFactory.create(outputDir, nativeImageName);
+        NativeImageBuildRunner buildRunner = nativeImageRunner.getBuildRunner();
 
         buildRunner.setup(processInheritIODisabled.isPresent() || processInheritIODisabledBuildItem.isPresent());
         final GraalVM.Version graalVMVersion = buildRunner.getGraalVMVersion();
@@ -294,41 +293,40 @@ public class NativeImageBuildStep {
         return outputTargetBuildItem.getBaseName() + packageConfig.getRunnerSuffix();
     }
 
+    private String getResultingExecutableName(String nativeImageName, boolean isContainerBuild) {
+        String resultingExecutableName = nativeImageName;
+        if (SystemUtils.IS_OS_WINDOWS && !isContainerBuild) {
+            //once image is generated it gets added .exe on Windows
+            resultingExecutableName = resultingExecutableName + ".exe";
+        }
+        return resultingExecutableName;
+    }
+
     /**
      * Resolves the runner factory. Happens quite early, *before* the build.
      */
     @BuildStep
-    public NativeImageRunnerFactoryBuildItem resolveNativeImageBuildRunnerFactory(NativeConfig nativeConfig) {
+    public NativeImageRunnerBuildItem resolveNativeImageBuildRunner(NativeConfig nativeConfig) {
         boolean isExplicitContainerBuild = nativeConfig.containerBuild
                 .orElse(nativeConfig.containerRuntime.isPresent() || nativeConfig.remoteContainerBuild);
         if (!isExplicitContainerBuild) {
-            NativeImageBuildLocalRunner.Factory localRunnerFactory = getNativeImageBuildLocalRunnerFactory(nativeConfig);
-            if (localRunnerFactory != null) {
-                return new NativeImageRunnerFactoryBuildItem(localRunnerFactory);
+            NativeImageBuildLocalRunner localRunner = getNativeImageBuildLocalRunner(nativeConfig);
+            if (localRunner != null) {
+                return new NativeImageRunnerBuildItem(localRunner);
             }
             String executableName = getNativeImageExecutableName();
             String errorMessage = "Cannot find the `" + executableName
                     + "` in the GRAALVM_HOME, JAVA_HOME and System PATH. Install it using `gu install native-image`";
             if (!SystemUtils.IS_OS_LINUX) {
                 // Delay the error: if we're just building native sources, we may not need the build runner at all.
-                return new NativeImageRunnerFactoryBuildItem(new NativeImageBuildRunner.Factory() {
-                    @Override
-                    public NativeImageBuildRunner create(Path outputDir, String nativeImageName) {
-                        throw new RuntimeException(errorMessage);
-                    }
-
-                    @Override
-                    public boolean isContainerBuild() {
-                        return false;
-                    }
-                });
+                return new NativeImageRunnerBuildItem(new NativeImageBuildRunnerError(errorMessage));
             }
             log.warn(errorMessage + " Attempting to fall back to container build.");
         }
         if (nativeConfig.remoteContainerBuild) {
-            return new NativeImageRunnerFactoryBuildItem(new NativeImageBuildRemoteContainerRunner.Factory(nativeConfig));
+            return new NativeImageRunnerBuildItem(new NativeImageBuildRemoteContainerRunner(nativeConfig));
         }
-        return new NativeImageRunnerFactoryBuildItem(new NativeImageBuildLocalContainerRunner.Factory(nativeConfig));
+        return new NativeImageRunnerBuildItem(new NativeImageBuildLocalContainerRunner(nativeConfig));
     }
 
     private void copyJarSourcesToLib(OutputTargetBuildItem outputTargetBuildItem,
@@ -436,12 +434,12 @@ public class NativeImageBuildStep {
         }
     }
 
-    private static NativeImageBuildLocalRunner.Factory getNativeImageBuildLocalRunnerFactory(NativeConfig nativeConfig) {
+    private static NativeImageBuildLocalRunner getNativeImageBuildLocalRunner(NativeConfig nativeConfig) {
         String executableName = getNativeImageExecutableName();
         if (nativeConfig.graalvmHome.isPresent()) {
             File file = Paths.get(nativeConfig.graalvmHome.get(), "bin", executableName).toFile();
             if (file.exists()) {
-                return new NativeImageBuildLocalRunner.Factory(file.getAbsolutePath());
+                return new NativeImageBuildLocalRunner(file.getAbsolutePath());
             }
         }
 
@@ -463,7 +461,7 @@ public class NativeImageBuildStep {
         if (javaHome != null) {
             File file = new File(javaHome, "bin/" + executableName);
             if (file.exists()) {
-                return new NativeImageBuildLocalRunner.Factory(file.getAbsolutePath());
+                return new NativeImageBuildLocalRunner(file.getAbsolutePath());
             }
         }
 
@@ -476,7 +474,7 @@ public class NativeImageBuildStep {
                 if (dir.isDirectory()) {
                     File file = new File(dir, executableName);
                     if (file.exists()) {
-                        return new NativeImageBuildLocalRunner.Factory(file.getAbsolutePath());
+                        return new NativeImageBuildLocalRunner(file.getAbsolutePath());
                     }
                 }
             }

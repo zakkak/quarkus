@@ -21,37 +21,24 @@ public abstract class NativeImageBuildContainerRunner extends NativeImageBuildRu
 
     private static final Logger log = Logger.getLogger(NativeImageBuildContainerRunner.class);
 
-    public static abstract class Factory implements NativeImageBuildRunner.Factory {
-        protected final NativeConfig nativeConfig;
-
-        public Factory(NativeConfig nativeConfig) {
-            this.nativeConfig = nativeConfig;
-        }
-
-        @Override
-        public abstract NativeImageBuildContainerRunner create(Path outputDir, String nativeImageName);
-
-        @Override
-        public boolean isContainerBuild() {
-            return true;
-        }
-    }
-
     final NativeConfig nativeConfig;
     protected final ContainerRuntimeUtil.ContainerRuntime containerRuntime;
     String[] baseContainerRuntimeArgs;
-    protected final String outputPath;
     private final String containerName;
 
-    protected NativeImageBuildContainerRunner(Factory factory, Path outputDir) {
-        this.nativeConfig = factory.nativeConfig;
+    protected NativeImageBuildContainerRunner(NativeConfig nativeConfig) {
+        this.nativeConfig = nativeConfig;
         containerRuntime = nativeConfig.containerRuntime.orElseGet(ContainerRuntimeUtil::detectContainerRuntime);
         log.infof("Using %s to run the native image builder", containerRuntime.getExecutableName());
 
         this.baseContainerRuntimeArgs = new String[] { "--env", "LANG=C", "--rm" };
 
-        outputPath = outputDir == null ? null : outputDir.toAbsolutePath().toString();
         containerName = "build-native-" + RandomStringUtils.random(5, true, false);
+    }
+
+    @Override
+    public boolean isContainer() {
+        return true;
     }
 
     @Override
@@ -85,8 +72,8 @@ public abstract class NativeImageBuildContainerRunner extends NativeImageBuildRu
     }
 
     @Override
-    protected String[] getBuildCommand(List<String> args) {
-        List<String> containerRuntimeBuildArgs = getContainerRuntimeBuildArgs();
+    protected String[] getBuildCommand(Path outputDir, List<String> args) {
+        List<String> containerRuntimeBuildArgs = getContainerRuntimeBuildArgs(outputDir);
         List<String> effectiveContainerRuntimeBuildArgs = new ArrayList<>(containerRuntimeBuildArgs.size() + 2);
         effectiveContainerRuntimeBuildArgs.addAll(containerRuntimeBuildArgs);
         effectiveContainerRuntimeBuildArgs.add("--name");
@@ -95,8 +82,8 @@ public abstract class NativeImageBuildContainerRunner extends NativeImageBuildRu
     }
 
     @Override
-    protected void objcopy(String... args) {
-        final List<String> containerRuntimeBuildArgs = getContainerRuntimeBuildArgs();
+    protected void objcopy(Path outputDir, String... args) {
+        final List<String> containerRuntimeBuildArgs = getContainerRuntimeBuildArgs(outputDir);
         Collections.addAll(containerRuntimeBuildArgs, "--entrypoint", "/bin/bash");
         final ArrayList<String> objcopyCommand = new ArrayList<>(2);
         objcopyCommand.add("-c");
@@ -123,7 +110,7 @@ public abstract class NativeImageBuildContainerRunner extends NativeImageBuildRu
         }));
     }
 
-    protected List<String> getContainerRuntimeBuildArgs() {
+    protected List<String> getContainerRuntimeBuildArgs(Path outputDir) {
         List<String> containerRuntimeArgs = new ArrayList<>();
         nativeConfig.containerRuntimeOptions.ifPresent(containerRuntimeArgs::addAll);
         if (nativeConfig.debugBuildProcess && nativeConfig.publishDebugBuildProcessPort) {

@@ -9,30 +9,15 @@ import org.apache.commons.lang3.SystemUtils;
 
 public class NativeImageBuildLocalRunner extends NativeImageBuildRunner {
 
-    public static class Factory implements NativeImageBuildRunner.Factory {
-        private final String nativeImageExecutable;
+    private final String nativeImageExecutable;
 
-        public Factory(String nativeImageExecutable) {
-            this.nativeImageExecutable = nativeImageExecutable;
-        }
-
-        @Override
-        public NativeImageBuildRunner create(Path outputDir, String nativeImageName) {
-            return new NativeImageBuildLocalRunner(this, outputDir.toFile());
-        }
-
-        @Override
-        public boolean isContainerBuild() {
-            return false;
-        }
+    public NativeImageBuildLocalRunner(String nativeImageExecutable) {
+        this.nativeImageExecutable = nativeImageExecutable;
     }
 
-    private final String nativeImageExecutable;
-    private final File workingDirectory;
-
-    private NativeImageBuildLocalRunner(Factory factory, File workingDirectory) {
-        this.nativeImageExecutable = factory.nativeImageExecutable;
-        this.workingDirectory = workingDirectory;
+    @Override
+    public boolean isContainer() {
+        return false;
     }
 
     @Override
@@ -41,16 +26,16 @@ public class NativeImageBuildLocalRunner extends NativeImageBuildRunner {
     }
 
     @Override
-    protected String[] getBuildCommand(List<String> args) {
+    protected String[] getBuildCommand(Path outputDir, List<String> args) {
         return buildCommand(args);
     }
 
     @Override
-    protected void objcopy(String... args) {
+    protected void objcopy(Path outputDir, String... args) {
         final String[] command = new String[args.length + 1];
         command[0] = "objcopy";
         System.arraycopy(args, 0, command, 1, args.length);
-        runCommand(command, null, workingDirectory);
+        runCommand(command, null, outputDir.toFile());
     }
 
     @Override
