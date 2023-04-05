@@ -14,13 +14,15 @@ import io.quarkus.deployment.annotations.BuildProducer;
 import io.quarkus.deployment.annotations.BuildStep;
 import io.quarkus.deployment.builditem.GeneratedResourceBuildItem;
 import io.quarkus.deployment.builditem.nativeimage.JniRuntimeAccessBuildItem;
+import io.quarkus.deployment.builditem.nativeimage.JniRuntimeAccessJSONBuildItem;
 import io.quarkus.deployment.pkg.steps.NativeOrNativeSourcesBuild;
 
 public class NativeImageJNIConfigStep {
 
     @BuildStep(onlyIf = NativeOrNativeSourcesBuild.class)
     void generateJniConfig(BuildProducer<GeneratedResourceBuildItem> jniConfig,
-            List<JniRuntimeAccessBuildItem> jniRuntimeAccessibleClasses) {
+            List<JniRuntimeAccessBuildItem> jniRuntimeAccessibleClasses,
+            List<JniRuntimeAccessJSONBuildItem> jniRuntimeJSON) {
         final Map<String, JniInfo> jniClasses = new LinkedHashMap<>();
 
         for (JniRuntimeAccessBuildItem jniAccessible : jniRuntimeAccessibleClasses) {
@@ -45,6 +47,13 @@ public class NativeImageJNIConfigStep {
             }
 
             root.add(json);
+        }
+
+        // Add raw, unescaped, unprocessed nodes for user's fine-grained control.
+        for (JniRuntimeAccessJSONBuildItem jniRuntimeAccessJSONBuildItem : jniRuntimeJSON) {
+            for (String j : jniRuntimeAccessJSONBuildItem.jsonNodes) {
+                root.addRaw(j);
+            }
         }
 
         try (StringWriter writer = new StringWriter()) {

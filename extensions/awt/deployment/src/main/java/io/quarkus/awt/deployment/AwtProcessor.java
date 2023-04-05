@@ -2,6 +2,10 @@ package io.quarkus.awt.deployment;
 
 import static io.quarkus.deployment.builditem.nativeimage.UnsupportedOSBuildItem.Os.WINDOWS;
 
+import java.io.IOException;
+import java.net.URISyntaxException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.stream.Stream;
 
 import io.quarkus.awt.runtime.graal.DarwinAwtFeature;
@@ -11,6 +15,7 @@ import io.quarkus.deployment.annotations.BuildStep;
 import io.quarkus.deployment.builditem.FeatureBuildItem;
 import io.quarkus.deployment.builditem.NativeImageFeatureBuildItem;
 import io.quarkus.deployment.builditem.nativeimage.JniRuntimeAccessBuildItem;
+import io.quarkus.deployment.builditem.nativeimage.JniRuntimeAccessJSONBuildItem;
 import io.quarkus.deployment.builditem.nativeimage.NativeImageResourcePatternsBuildItem;
 import io.quarkus.deployment.builditem.nativeimage.NativeMinimalJavaVersionBuildItem;
 import io.quarkus.deployment.builditem.nativeimage.ReflectiveClassBuildItem;
@@ -46,31 +51,27 @@ class AwtProcessor {
     }
 
     @BuildStep(onlyIf = NativeOrNativeSourcesBuild.class)
-    void i18NProperties(
+    void resources(
             BuildProducer<NativeImageResourcePatternsBuildItem> resourcePatternsBuildItemBuildProducer) {
         resourcePatternsBuildItemBuildProducer
-                .produce(NativeImageResourcePatternsBuildItem.builder().includePattern(".*/iio-plugin.*properties$").build());
+                .produce(NativeImageResourcePatternsBuildItem.builder()
+                        .includePattern(".*/iio-plugin.*properties$") // Texts for e.g. exceptions strings
+                        .includePattern(".*/.*pf$") // Default colour profiles
+                        .build());
     }
 
     @BuildStep
     ReflectiveClassBuildItem setupReflectionClasses() {
-        return ReflectiveClassBuildItem.builder("sun.awt.X11.XToolkit",
+        return ReflectiveClassBuildItem.builder(
+                "com.sun.imageio.plugins.common.I18N",
+                "sun.awt.X11.XToolkit",
                 "sun.awt.X11FontManager",
-                "sun.awt.X11GraphicsEnvironment",
-                "com.sun.imageio.plugins.common.I18N").build();
+                "sun.awt.X11GraphicsEnvironment").build();
     }
 
     @BuildStep
     ReflectiveClassBuildItem setupReflectionClassesWithMethods() {
-        return ReflectiveClassBuildItem.builder("sun.java2d.loops.SetDrawLineANY",
-                "sun.java2d.loops.SetDrawPathANY",
-                "sun.java2d.loops.SetDrawPolygonsANY",
-                "sun.java2d.loops.SetDrawRectANY",
-                "sun.java2d.loops.SetFillPathANY",
-                "sun.java2d.loops.SetFillRectANY",
-                "sun.java2d.loops.SetFillSpansANY",
-                "sun.java2d.loops.OpaqueCopyAnyToArgb",
-                "sun.java2d.loops.OpaqueCopyArgbToAny",
+        return ReflectiveClassBuildItem.builder(
                 "javax.imageio.plugins.tiff.BaselineTIFFTagSet",
                 "javax.imageio.plugins.tiff.ExifGPSTagSet",
                 "javax.imageio.plugins.tiff.ExifInteroperabilityTagSet",
@@ -78,7 +79,34 @@ class AwtProcessor {
                 "javax.imageio.plugins.tiff.ExifTIFFTagSet",
                 "javax.imageio.plugins.tiff.FaxTIFFTagSet",
                 "javax.imageio.plugins.tiff.GeoTIFFTagSet",
-                "javax.imageio.plugins.tiff.TIFFTagSet").methods().build();
+                "javax.imageio.plugins.tiff.TIFFTagSet",
+                "sun.java2d.loops.OpaqueCopyAnyToArgb",
+                "sun.java2d.loops.OpaqueCopyArgbToAny",
+                "sun.java2d.loops.SetDrawLineANY",
+                "sun.java2d.loops.SetDrawPathANY",
+                "sun.java2d.loops.SetDrawPolygonsANY",
+                "sun.java2d.loops.SetDrawRectANY",
+                "sun.java2d.loops.SetFillPathANY",
+                "sun.java2d.loops.SetFillRectANY",
+                "sun.java2d.loops.SetFillSpansANY").methods().build();
+    }
+
+    /**
+     * There are situations where we need more fine-grained control, e.g. as for:
+     * https://github.com/openjdk/jdk17u-dev/blob/jdk-17.0.7+5/src/java.desktop/unix/native/libawt/awt/awt_LoadLibrary.c#L147
+     * Json snippet directly injects raw records into already initialized JSON JNI config array.
+     * To debug the result, see your built -runner jar:META-INF/native-image/jni-config.json
+     * Use with caution.
+     *
+     * @return
+     * @throws URISyntaxException
+     * @throws IOException
+     */
+    @BuildStep
+    JniRuntimeAccessJSONBuildItem setupAWTInit() throws URISyntaxException, IOException {
+        final String jsonArray = Files.readString(Paths.get(getClass().getResource("/jni-json-snippet.json").toURI()));
+        // Strip leading [ and trailing ] as we are injecting these elements into an already existing JSON array.
+        return new JniRuntimeAccessJSONBuildItem(jsonArray.substring(1, jsonArray.length() - 1));
     }
 
     @BuildStep
@@ -90,15 +118,18 @@ class AwtProcessor {
                 "java.awt.Color",
                 "java.awt.color.CMMException",
                 "java.awt.color.ColorSpace",
+                "java.awt.color.ICC_ColorSpace",
                 "java.awt.color.ICC_Profile",
                 "java.awt.color.ICC_ProfileGray",
                 "java.awt.color.ICC_ProfileRGB",
+                "java.awt.Composite",
                 "java.awt.geom.AffineTransform",
                 "java.awt.geom.GeneralPath",
                 "java.awt.geom.Path2D",
                 "java.awt.geom.Path2D$Float",
                 "java.awt.geom.Point2D$Float",
                 "java.awt.geom.Rectangle2D$Float",
+                "java.awt.GraphicsEnvironment",
                 "java.awt.image.AffineTransformOp",
                 "java.awt.image.BandedSampleModel",
                 "java.awt.image.BufferedImage",
@@ -115,6 +146,7 @@ class AwtProcessor {
                 "java.awt.image.Raster",
                 "java.awt.image.SampleModel",
                 "java.awt.image.SinglePixelPackedSampleModel",
+                "java.awt.Rectangle",
                 "java.awt.Transparency",
                 "javax.imageio.IIOException",
                 "javax.imageio.plugins.jpeg.JPEGHuffmanTable",
@@ -137,12 +169,17 @@ class AwtProcessor {
                 "sun.awt.image.SunWritableRaster",
                 "sun.awt.image.WritableRasterNative",
                 "sun.awt.SunHints",
+                "sun.awt.X11FontManager",
+                "sun.awt.X11GraphicsConfig",
+                "sun.awt.X11GraphicsDevice",
                 "sun.font.CharToGlyphMapper",
                 "sun.font.Font2D",
                 "sun.font.FontConfigManager",
+                "sun.font.FontConfigManager$FcCompFont",
+                "sun.font.FontConfigManager$FontConfigFont",
+                "sun.font.FontConfigManager$FontConfigInfo",
                 "sun.font.FontManagerNativeLibrary",
                 "sun.font.FontStrike",
-                // Added for JDK 19+ due to: https://github.com/openjdk/jdk20/commit/9bc023220 calling FontUtilities
                 "sun.font.FontUtilities",
                 "sun.font.FreetypeFontScaler",
                 "sun.font.GlyphLayout",
@@ -158,6 +195,7 @@ class AwtProcessor {
                 "sun.font.StrikeMetrics",
                 "sun.font.TrueTypeFont",
                 "sun.font.Type1Font",
+                "sun.java2d.cmm.lcms.LCMS",
                 "sun.java2d.cmm.lcms.LCMSImageLayout",
                 "sun.java2d.cmm.lcms.LCMSProfile",
                 "sun.java2d.cmm.lcms.LCMSTransform",
@@ -194,9 +232,12 @@ class AwtProcessor {
                 "sun.java2d.pipe.RegionIterator",
                 "sun.java2d.pipe.ShapeSpanIterator",
                 "sun.java2d.pipe.SpanClipRenderer",
+                "sun.java2d.pipe.SpanIterator",
                 "sun.java2d.pipe.ValidatePipe",
                 "sun.java2d.SunGraphics2D",
-                "sun.java2d.SurfaceData");
+                "sun.java2d.SunGraphicsEnvironment",
+                "sun.java2d.SurfaceData",
+                "sun.java2d.xr.XRSurfaceData");
     }
 
     @BuildStep
@@ -205,7 +246,8 @@ class AwtProcessor {
          * Note that this initialization is not enough if user wants to deserialize actual images
          * (e.g. from XML). AWT Extension must be loaded for decoding JDK supported image formats.
          */
-        Stream.of("com.sun.imageio",
+        Stream.of(
+                "com.sun.imageio",
                 "java.awt",
                 "javax.imageio",
                 "sun.awt",
@@ -214,5 +256,4 @@ class AwtProcessor {
                 .map(RuntimeInitializedPackageBuildItem::new)
                 .forEach(runtimeInitilizedPackages::produce);
     }
-
 }

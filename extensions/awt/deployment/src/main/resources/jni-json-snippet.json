@@ -1,0 +1,79 @@
+[
+  {
+    "name": "java.lang.System",
+    "methods": [
+      {
+        "name": "load",
+        "parameterTypes": [
+          "java.lang.String"
+        ]
+      },
+      {
+        "name": "setProperty",
+        "parameterTypes": [
+          "java.lang.String",
+          "java.lang.String"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "sun.awt.SunToolkit",
+    "methods": [
+      {
+        "name": "awtLock",
+        "parameterTypes": []
+      },
+      {
+        "name": "awtLockNotify",
+        "parameterTypes": []
+      },
+      {
+        "name": "awtLockNotifyAll",
+        "parameterTypes": []
+      },
+      {
+        "name": "awtLockWait",
+        "parameterTypes": [
+          "long"
+        ]
+      },
+      {
+        "name": "awtUnlock",
+        "parameterTypes": []
+      }
+    ],
+    "fields": [
+      {
+        "name": "AWT_LOCK"
+      },
+      {
+        "name": "AWT_LOCK_COND"
+      }
+    ]
+  },
+  {
+    "name": "sun.awt.X11.XErrorHandlerUtil",
+    "methods": [
+      {
+        "name": "init",
+        "parameterTypes": [
+          "long"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "sun.awt.X11.XToolkit",
+    "allDeclaredFields": true
+  },
+  {
+    "name": "java.lang.Thread",
+    "methods": [
+      {
+        "name": "yield",
+        "parameterTypes": []
+      }
+    ]
+  }
+]
