@@ -2,10 +2,6 @@ package io.quarkus.awt.deployment;
 
 import static io.quarkus.deployment.builditem.nativeimage.UnsupportedOSBuildItem.Os.WINDOWS;
 
-import java.io.IOException;
-import java.net.URISyntaxException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.stream.Stream;
 
 import io.quarkus.awt.runtime.graal.DarwinAwtFeature;
@@ -15,7 +11,8 @@ import io.quarkus.deployment.annotations.BuildStep;
 import io.quarkus.deployment.builditem.FeatureBuildItem;
 import io.quarkus.deployment.builditem.NativeImageFeatureBuildItem;
 import io.quarkus.deployment.builditem.nativeimage.JniRuntimeAccessBuildItem;
-import io.quarkus.deployment.builditem.nativeimage.JniRuntimeAccessJSONBuildItem;
+import io.quarkus.deployment.builditem.nativeimage.JniRuntimeAccessFieldBuildItem;
+import io.quarkus.deployment.builditem.nativeimage.JniRuntimeAccessMethodBuildItem;
 import io.quarkus.deployment.builditem.nativeimage.NativeImageResourcePatternsBuildItem;
 import io.quarkus.deployment.builditem.nativeimage.NativeMinimalJavaVersionBuildItem;
 import io.quarkus.deployment.builditem.nativeimage.ReflectiveClassBuildItem;
@@ -91,22 +88,28 @@ class AwtProcessor {
                 "sun.java2d.loops.SetFillSpansANY").methods().build();
     }
 
-    /**
-     * There are situations where we need more fine-grained control, e.g. as for:
-     * https://github.com/openjdk/jdk17u-dev/blob/jdk-17.0.7+5/src/java.desktop/unix/native/libawt/awt/awt_LoadLibrary.c#L147
-     * Json snippet directly injects raw records into already initialized JSON JNI config array.
-     * To debug the result, see your built -runner jar:META-INF/native-image/jni-config.json
-     * Use with caution.
-     *
-     * @return
-     * @throws URISyntaxException
-     * @throws IOException
-     */
     @BuildStep
-    JniRuntimeAccessJSONBuildItem setupAWTInit() throws URISyntaxException, IOException {
-        final String jsonArray = Files.readString(Paths.get(getClass().getResource("/jni-json-snippet.json").toURI()));
-        // Strip leading [ and trailing ] as we are injecting these elements into an already existing JSON array.
-        return new JniRuntimeAccessJSONBuildItem(jsonArray.substring(1, jsonArray.length() - 1));
+    void setupAWTInit(BuildProducer<JniRuntimeAccessBuildItem> jniClassProducer,
+            BuildProducer<JniRuntimeAccessMethodBuildItem> jniMethodProducer,
+            BuildProducer<JniRuntimeAccessFieldBuildItem> jniFieldProducer) {
+        jniMethodProducer.produce(new JniRuntimeAccessMethodBuildItem("java.lang.System", "load", "java.lang.String"));
+        jniMethodProducer.produce(
+                new JniRuntimeAccessMethodBuildItem("java.lang.System", "setProperty", "java.lang.String", "java.lang.String"));
+
+        jniMethodProducer.produce(new JniRuntimeAccessMethodBuildItem("sun.awt.SunToolkit", "awtLock"));
+        jniMethodProducer.produce(new JniRuntimeAccessMethodBuildItem("sun.awt.SunToolkit", "awtLockNotify"));
+        jniMethodProducer.produce(new JniRuntimeAccessMethodBuildItem("sun.awt.SunToolkit", "awtLockNotifyAll"));
+        jniMethodProducer.produce(new JniRuntimeAccessMethodBuildItem("sun.awt.SunToolkit", "awtLockWait", "long"));
+        jniMethodProducer.produce(new JniRuntimeAccessMethodBuildItem("sun.awt.SunToolkit", "awtUnlock"));
+
+        jniFieldProducer.produce(new JniRuntimeAccessFieldBuildItem("sun.awt.SunToolkit", "AWT_LOCK"));
+        jniFieldProducer.produce(new JniRuntimeAccessFieldBuildItem("sun.awt.SunToolkit", "AWT_LOCK_COND"));
+
+        jniMethodProducer.produce(new JniRuntimeAccessMethodBuildItem("sun.awt.X11.XErrorHandlerUtil", "init", "long"));
+
+        jniClassProducer.produce(new JniRuntimeAccessBuildItem(false, false, true, "sun.awt.X11.XToolkit"));
+
+        jniMethodProducer.produce(new JniRuntimeAccessMethodBuildItem("java.lang.Thread", "yield"));
     }
 
     @BuildStep

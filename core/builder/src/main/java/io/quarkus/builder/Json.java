@@ -145,12 +145,10 @@ public final class Json {
     public static class JsonArrayBuilder extends JsonBuilder<JsonArrayBuilder> {
 
         private final List<Object> values;
-        private final List<String> rawValues;
 
         private JsonArrayBuilder(boolean ignoreEmptyBuilders) {
             super(ignoreEmptyBuilders);
-            this.values = new ArrayList<>();
-            this.rawValues = new ArrayList<>();
+            this.values = new ArrayList<Object>();
         }
 
         JsonArrayBuilder add(JsonArrayBuilder value) {
@@ -165,11 +163,6 @@ public final class Json {
 
         public JsonArrayBuilder add(String value) {
             addInternal(value);
-            return this;
-        }
-
-        public JsonArrayBuilder addRaw(String value) {
-            addRawInternal(value);
             return this;
         }
 
@@ -201,12 +194,6 @@ public final class Json {
             }
         }
 
-        void addRawInternal(String value) {
-            if (value != null) {
-                rawValues.add(value);
-            }
-        }
-
         boolean isEmpty() {
             return isValuesEmpty(values);
         }
@@ -230,13 +217,6 @@ public final class Json {
                     appendable.append(ENTRY_SEPARATOR);
                 }
                 appendValue(appendable, value);
-            }
-            for (ListIterator<String> iterator = rawValues.listIterator(); iterator.hasNext();) {
-                String value = iterator.next();
-                if (++idx > 1) {
-                    appendable.append(ENTRY_SEPARATOR);
-                }
-                appendRawValue(appendable, value);
             }
             appendable.append(ARRAY_END);
         }
@@ -352,10 +332,6 @@ public final class Json {
         } else {
             throw new IllegalStateException("Unsupported value type: " + value);
         }
-    }
-
-    static void appendRawValue(Appendable appendable, String value) throws IOException {
-        appendable.append(value);
     }
 
     static void appendStringValue(Appendable appendable, String value) throws IOException {
