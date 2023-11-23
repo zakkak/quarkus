@@ -214,7 +214,7 @@ public class NativeImageBuildStep {
         NativeImageBuildRunner buildRunner = nativeImageRunner.getBuildRunner();
 
         buildRunner.setup(processInheritIODisabled.isPresent() || processInheritIODisabledBuildItem.isPresent());
-        final GraalVM.Version graalVMVersion = buildRunner.getGraalVMVersion();
+        final GraalVM.Version graalVMVersion = buildRunner.getGraalVMVersion(nativeConfig);
         checkGraalVMVersion(graalVMVersion);
 
         try {

@@ -333,6 +333,12 @@ public interface NativeConfig {
     boolean reuseExisting();
 
     /**
+     * Explicitly set GraalVM version.
+     * This is usefull when testing a Mandrel/Graal build that is not yet supported.
+     */
+    Optional<String> mandrelVersion();
+
+    /**
      * Build time configuration options for resources inclusion in the native executable.
      */
     ResourcesConfig resources();

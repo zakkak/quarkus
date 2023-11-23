@@ -198,6 +198,11 @@ public class TestNativeConfig implements NativeConfig {
     }
 
     @Override
+    public Optional<String> mandrelVersion() {
+        return Optional.empty();
+    }
+
+    @Override
     public ResourcesConfig resources() {
         return null;
     }

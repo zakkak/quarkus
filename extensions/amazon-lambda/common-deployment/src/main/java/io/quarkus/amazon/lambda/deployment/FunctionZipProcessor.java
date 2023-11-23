@@ -19,6 +19,7 @@ import org.jboss.logging.Logger;
 import io.quarkus.deployment.IsNormal;
 import io.quarkus.deployment.annotations.BuildProducer;
 import io.quarkus.deployment.annotations.BuildStep;
+import io.quarkus.deployment.pkg.NativeConfig;
 import io.quarkus.deployment.pkg.builditem.ArtifactResultBuildItem;
 import io.quarkus.deployment.pkg.builditem.JarBuildItem;
 import io.quarkus.deployment.pkg.builditem.LegacyJarRequiredBuildItem;
@@ -107,7 +108,8 @@ public class FunctionZipProcessor {
      * @throws Exception
      */
     @BuildStep(onlyIf = { IsNormal.class, NativeBuild.class })
-    public void nativeZip(OutputTargetBuildItem target,
+    public void nativeZip(NativeConfig nativeConfig,
+            OutputTargetBuildItem target,
             Optional<UpxCompressedBuildItem> upxCompressed, // used to ensure that we work with the compressed native binary if compression was enabled
             BuildProducer<ArtifactResultBuildItem> artifactResultProducer,
             NativeImageBuildItem nativeImage,
@@ -143,7 +145,7 @@ public class FunctionZipProcessor {
             }
             addZipEntry(zip, nativeImage.getPath(), executableName, 0755);
 
-            final GraalVM.Version graalVMVersion = nativeImageRunner.getBuildRunner().getGraalVMVersion();
+            final GraalVM.Version graalVMVersion = nativeImageRunner.getBuildRunner().getGraalVMVersion(nativeConfig);
             if (graalVMVersion.compareTo(GraalVM.Version.VERSION_23_0_0) >= 0) {
                 // See https://github.com/oracle/graal/issues/4921
                 try (DirectoryStream<Path> sharedLibs = Files.newDirectoryStream(nativeImage.getPath().getParent(),

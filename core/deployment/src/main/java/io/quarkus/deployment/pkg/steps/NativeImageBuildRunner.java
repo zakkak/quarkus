@@ -15,6 +15,7 @@ import java.util.concurrent.Executors;
 import org.apache.commons.lang3.SystemUtils;
 import org.jboss.logging.Logger;
 
+import io.quarkus.deployment.pkg.NativeConfig;
 import io.quarkus.deployment.util.ProcessUtil;
 
 public abstract class NativeImageBuildRunner {
@@ -23,18 +24,23 @@ public abstract class NativeImageBuildRunner {
 
     private static GraalVM.Version graalVMVersion = null;
 
-    public GraalVM.Version getGraalVMVersion() {
+    public GraalVM.Version getGraalVMVersion(NativeConfig nativeConfig) {
         if (graalVMVersion == null) {
             try {
-                final String[] versionCommand = getGraalVMVersionCommand(Collections.singletonList("--version"));
-                log.debugf(String.join(" ", versionCommand).replace("$", "\\$"));
-                final Process versionProcess = new ProcessBuilder(versionCommand)
-                        .redirectErrorStream(true)
-                        .start();
-                versionProcess.waitFor();
-                try (BufferedReader reader = new BufferedReader(
-                        new InputStreamReader(versionProcess.getInputStream(), StandardCharsets.UTF_8))) {
-                    graalVMVersion = GraalVM.Version.of(reader.lines());
+                if (nativeConfig.mandrelVersion().isPresent()) {
+                    String version = nativeConfig.mandrelVersion().get();
+                    graalVMVersion = new GraalVM.Version(version, version, GraalVM.Distribution.MANDREL);
+                } else {
+                    final String[] versionCommand = getGraalVMVersionCommand(Collections.singletonList("--version"));
+                    log.debugf(String.join(" ", versionCommand).replace("$", "\\$"));
+                    final Process versionProcess = new ProcessBuilder(versionCommand)
+                            .redirectErrorStream(true)
+                            .start();
+                    versionProcess.waitFor();
+                    try (BufferedReader reader = new BufferedReader(
+                            new InputStreamReader(versionProcess.getInputStream(), StandardCharsets.UTF_8))) {
+                        graalVMVersion = GraalVM.Version.of(reader.lines());
+                    }
                 }
             } catch (Exception e) {
                 throw new RuntimeException("Failed to get GraalVM version", e);
