@@ -28,10 +28,9 @@ public class SecurityProviderRecorder {
 
     public void addBouncyCastleFipsJsseProvider() {
         Provider bc = loadProvider(SecurityProviderUtils.BOUNCYCASTLE_FIPS_PROVIDER_CLASS_NAME);
-        int sunIndex = findProviderIndex(SecurityProviderUtils.SUN_PROVIDER_NAME);
-        insertProvider(bc, sunIndex);
+        addProvider(bc);
         Provider bcJsse = loadProviderWithParams(SecurityProviderUtils.BOUNCYCASTLE_JSSE_PROVIDER_CLASS_NAME,
                 new Class[] { boolean.class, Provider.class }, new Object[] { true, bc });
-        insertProvider(bcJsse, sunIndex + 1);
+        addProvider(bcJsse);
     }
 }

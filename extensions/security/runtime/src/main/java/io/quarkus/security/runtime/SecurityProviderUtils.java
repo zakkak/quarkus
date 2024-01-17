@@ -8,9 +8,7 @@ import java.util.Map;
 import io.quarkus.runtime.configuration.ConfigurationException;
 
 public final class SecurityProviderUtils {
-    public static final String SUN_PROVIDER_NAME = "SUN";
     public static final String SUN_JSSE_PROVIDER_NAME = "SunJSSE";
-    public static final String SUN_JSSE_PROVIDER_CLASS_NAME = "com.sun.net.ssl.internal.ssl.Provider";
     public static final String BOUNCYCASTLE_PROVIDER_NAME = "BC";
     public static final String BOUNCYCASTLE_JSSE_PROVIDER_NAME = BOUNCYCASTLE_PROVIDER_NAME + "JSSE";
     public static final String BOUNCYCASTLE_FIPS_PROVIDER_NAME = "BCFIPS";

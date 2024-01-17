@@ -348,8 +348,6 @@ public class SecurityProcessor {
                                     int.class),
                             bcJsseProvider, overallCatch.load(sunJsseIndex + 1));
                 } else {
-                    final int sunIndex = findProviderIndex(SecurityProviderUtils.SUN_PROVIDER_NAME);
-
                     ResultHandle bcFipsProvider = overallCatch
                             .newInstance(MethodDescriptor
                                     .ofConstructor(SecurityProviderUtils.BOUNCYCASTLE_FIPS_PROVIDER_CLASS_NAME));
@@ -360,13 +358,11 @@ public class SecurityProcessor {
                             overallCatch.load(true), bcFipsProvider);
 
                     overallCatch.invokeStaticMethod(
-                            MethodDescriptor.ofMethod(Security.class, "insertProviderAt", int.class, Provider.class,
-                                    int.class),
-                            bcFipsProvider, overallCatch.load(sunIndex));
+                            MethodDescriptor.ofMethod(Security.class, "addProvider", int.class, Provider.class),
+                            bcFipsProvider);
                     overallCatch.invokeStaticMethod(
-                            MethodDescriptor.ofMethod(Security.class, "insertProviderAt", int.class, Provider.class,
-                                    int.class),
-                            bcJsseProvider, overallCatch.load(sunIndex + 1));
+                            MethodDescriptor.ofMethod(Security.class, "addProvider", int.class, Provider.class),
+                            bcJsseProvider);
                 }
             } else {
                 // BC or BCFIPS
