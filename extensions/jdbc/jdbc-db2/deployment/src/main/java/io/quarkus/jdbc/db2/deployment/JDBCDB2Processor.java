@@ -27,6 +27,7 @@ import io.quarkus.deployment.builditem.SslNativeConfigBuildItem;
 import io.quarkus.deployment.builditem.nativeimage.JPMSExportBuildItem;
 import io.quarkus.deployment.builditem.nativeimage.NativeImageAllowIncompleteClasspathBuildItem;
 import io.quarkus.deployment.builditem.nativeimage.NativeImageConfigBuildItem;
+import io.quarkus.deployment.builditem.nativeimage.NativeImageResourceBuildItem;
 import io.quarkus.deployment.builditem.nativeimage.ReflectiveClassBuildItem;
 import io.quarkus.deployment.builditem.nativeimage.ServiceProviderBuildItem;
 import io.quarkus.jdbc.db2.runtime.DB2AgroalConnectionConfigurer;
@@ -88,6 +89,10 @@ public class JDBCDB2Processor {
                 T4Resources.class)
                 .reason(getClass().getName() + " DB2 JDBC driver classes")
                 .build());
+
+        reflectiveClass.produce(ReflectiveClassBuildItem.builder("com.ibm.pdq.cmx.client.DataSourceFactory")
+                .reason(getClass().getName() + " accessed reflectively by DB2 JDBC driver")
+                .build());
     }
 
     @BuildStep
@@ -132,5 +137,10 @@ public class JDBCDB2Processor {
         // which is strongly encapsulated in Java 17 requiring
         // --add-exports=java.base/sun.security.action=ALL-UNNAMED
         jpmsExports.produce(new JPMSExportBuildItem("java.base", "sun.security.action"));
+    }
+
+    @BuildStep
+    NativeImageResourceBuildItem registerResources() {
+        return new NativeImageResourceBuildItem("pdq.properties");
     }
 }
