@@ -6,6 +6,9 @@ import javax.management.JMX;
 import javax.management.MBeanServerConnection;
 import javax.management.ObjectName;
 
+import org.eclipse.microprofile.config.Config;
+import org.eclipse.microprofile.config.ConfigProvider;
+
 import com.oracle.svm.core.annotate.Substitute;
 import com.oracle.svm.core.annotate.TargetClass;
 
@@ -25,7 +28,9 @@ final class Target_javax_management_JMX {
 
         @Override
         public boolean getAsBoolean() {
-            String monitoringProperty = System.getProperty("quarkus.native.monitoring");
+            Config config = ConfigProvider.getConfig();
+            String monitoringProperty = config.getConfigValue("quarkus.native.monitoring").getValue();
+            System.out.println(config.getConfigValue("quarkus.native.monitoring"));
             if (monitoringProperty != null) {
                 return !monitoringProperty.contains("jmxserver");
             }

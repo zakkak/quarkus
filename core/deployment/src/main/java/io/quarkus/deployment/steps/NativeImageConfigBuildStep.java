@@ -84,12 +84,6 @@ class NativeImageConfigBuildStep {
             nativeImage.produce(new NativeImageSystemPropertyBuildItem("quarkus.native.inline-before-analysis", "true"));
         }
 
-        if (nativeConfig.monitoring().isPresent()) {
-            nativeImage.produce(new NativeImageSystemPropertyBuildItem("quarkus.native.monitoring",
-                    nativeConfig.monitoring().get().stream().map(x -> x.toString().toLowerCase())
-                            .collect(Collectors.joining(","))));
-        }
-
         for (JniBuildItem jniBuildItem : jniBuildItems) {
             if (jniBuildItem.getLibraryPaths() != null && !jniBuildItem.getLibraryPaths().isEmpty()) {
                 for (String path : jniBuildItem.getLibraryPaths()) {
