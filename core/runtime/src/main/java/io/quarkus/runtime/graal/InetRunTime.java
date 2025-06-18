@@ -18,11 +18,19 @@ final class Inet4AnyAccessor {
     static Inet4Address get() {
         return InetRunTime.INET4_ANY;
     }
+
+    static void set(Inet4Address unused) {
+        // TODO throw exception?
+    }
 }
 
 final class Inet4LoopbackAccessor {
     static Inet4Address get() {
         return InetRunTime.INET4_LOOPBACK;
+    }
+
+    static void set(Inet4Address unused) {
+        // TODO throw exception?
     }
 }
 
@@ -30,17 +38,29 @@ final class Inet4BroadcastAccessor {
     static Inet4Address get() {
         return InetRunTime.INET4_BROADCAST;
     }
+
+    static void set(Inet4Address unused) {
+        // TODO throw exception?
+    }
 }
 
 final class Inet6AnyAccessor {
     static Inet6Address get() {
         return InetRunTime.INET6_ANY;
     }
+
+    static void set(Inet6Address unused) {
+        // TODO throw exception?
+    }
 }
 
 final class Inet6LoopbackAccessor {
     static Inet6Address get() {
         return InetRunTime.INET6_LOOPBACK;
+    }
+
+    static void set(Inet6Address unused) {
+        // TODO throw exception?
     }
 }
 
@@ -55,6 +75,11 @@ class Inet4AnyCidrAccessor {
             result = initializeOnce();
         }
         return result;
+    }
+
+    static void set(Target_io_smallrye_common_net_CidrAddress value) {
+        // TODO throw exception?
+        INET4_ANY_CIDR = value;
     }
 
     private static synchronized Target_io_smallrye_common_net_CidrAddress initializeOnce() {
@@ -80,6 +105,11 @@ class Inet6AnyCidrAccessor {
             result = initializeOnce();
         }
         return result;
+    }
+
+    static void set(Target_io_smallrye_common_net_CidrAddress value) {
+        // TODO throw exception?
+        INET6_ANY_CIDR = value;
     }
 
     private static synchronized Target_io_smallrye_common_net_CidrAddress initializeOnce() {

@@ -91,8 +91,10 @@ public class NativeImageFeatureStep {
         MethodCreator beforeAn = file.getMethodCreator("beforeAnalysis", "V", BEFORE_ANALYSIS_ACCESS);
         TryBlock overallCatch = beforeAn.tryBlock();
 
-        overallCatch.invokeStaticMethod(BUILD_TIME_INITIALIZATION,
-                overallCatch.marshalAsArray(String.class, overallCatch.load(""))); // empty string means initialize everything
+        if (nativeConfig.buildTimeInit()) {
+            overallCatch.invokeStaticMethod(BUILD_TIME_INITIALIZATION,
+                    overallCatch.marshalAsArray(String.class, overallCatch.load(""))); // empty string means initialize everything
+        }
 
         // Set the user.language and user.country system properties to the default locale
         // The deprecated option takes precedence for users who are already using it.

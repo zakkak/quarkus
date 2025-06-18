@@ -8,6 +8,7 @@ import java.util.OptionalInt;
 import io.quarkus.deployment.images.ContainerImages;
 import io.quarkus.deployment.util.ContainerRuntimeUtil;
 import io.quarkus.runtime.annotations.ConfigDocDefault;
+import io.quarkus.runtime.annotations.ConfigDocIgnore;
 import io.quarkus.runtime.annotations.ConfigGroup;
 import io.quarkus.runtime.annotations.ConfigPhase;
 import io.quarkus.runtime.annotations.ConfigRoot;
@@ -51,6 +52,14 @@ public interface NativeConfig {
      * If an argument includes the {@code ,} symbol, it needs to be escaped, e.g. {@code \\,}
      */
     Optional<List<String>> additionalBuildArgsAppend();
+
+    /**
+     * If classes should be build time initialized by default.
+     * This is meant to be used for experimentation purposes only.
+     */
+    @ConfigDocIgnore
+    @WithDefault("true")
+    boolean buildTimeInit();
 
     /**
      * If the HTTP url handler should be enabled, allowing you to do URL.openConnection() for HTTP URLs

@@ -41,6 +41,11 @@ public class TestNativeConfig implements NativeConfig {
     }
 
     @Override
+    public boolean buildTimeInit() {
+        return true;
+    }
+
+    @Override
     public boolean enableHttpUrlHandler() {
         return false;
     }
