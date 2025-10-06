@@ -1,8 +1,5 @@
 package io.quarkus.deployment.steps;
 
-import java.io.IOException;
-import java.io.StringWriter;
-import java.nio.charset.StandardCharsets;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -12,9 +9,6 @@ import java.util.Set;
 import io.quarkus.builder.Json;
 import io.quarkus.builder.Json.JsonArrayBuilder;
 import io.quarkus.builder.Json.JsonObjectBuilder;
-import io.quarkus.deployment.annotations.BuildProducer;
-import io.quarkus.deployment.annotations.BuildStep;
-import io.quarkus.deployment.builditem.GeneratedResourceBuildItem;
 import io.quarkus.deployment.builditem.nativeimage.ForceNonWeakReflectiveClassBuildItem;
 import io.quarkus.deployment.builditem.nativeimage.ReflectiveClassBuildItem;
 import io.quarkus.deployment.builditem.nativeimage.ReflectiveClassConditionBuildItem;
@@ -22,20 +16,10 @@ import io.quarkus.deployment.builditem.nativeimage.ReflectiveFieldBuildItem;
 import io.quarkus.deployment.builditem.nativeimage.ReflectiveMethodBuildItem;
 import io.quarkus.deployment.builditem.nativeimage.ServiceProviderBuildItem;
 import io.quarkus.deployment.pkg.NativeConfig;
-import io.quarkus.deployment.pkg.steps.NativeOrNativeSourcesBuild;
 
-public class NativeImageReflectConfigStep {
+public class NativeImageReflectConfig {
 
-    @BuildStep(onlyIf = NativeOrNativeSourcesBuild.class)
-    void generateReflectConfig(BuildProducer<GeneratedResourceBuildItem> reflectConfig,
-            NativeConfig nativeConfig,
-            List<ReflectiveMethodBuildItem> reflectiveMethods,
-            List<ReflectiveFieldBuildItem> reflectiveFields,
-            List<ReflectiveClassBuildItem> reflectiveClassBuildItems,
-            List<ForceNonWeakReflectiveClassBuildItem> nonWeakReflectiveClassBuildItems,
-            List<ServiceProviderBuildItem> serviceProviderBuildItems,
-            List<ReflectiveClassConditionBuildItem> reflectiveClassConditionBuildItems) {
-
+    static JsonArrayBuilder generateReflectionConfig(NativeConfig nativeConfig, List<ReflectiveMethodBuildItem> reflectiveMethods, List<ReflectiveFieldBuildItem> reflectiveFields, List<ReflectiveClassBuildItem> reflectiveClassBuildItems, List<ForceNonWeakReflectiveClassBuildItem> nonWeakReflectiveClassBuildItems, List<ServiceProviderBuildItem> serviceProviderBuildItems, List<ReflectiveClassConditionBuildItem> reflectiveClassConditionBuildItems) {
         final Map<String, ReflectionInfo> reflectiveClasses = new LinkedHashMap<>();
         final Set<String> forcedNonWeakClasses = new HashSet<>();
         for (ForceNonWeakReflectiveClassBuildItem nonWeakReflectiveClassBuildItem : nonWeakReflectiveClassBuildItems) {
@@ -137,19 +121,12 @@ public class NativeImageReflectConfigStep {
                 for (String reason : info.reasons) {
                     reasonsArray.add(reason);
                 }
-                json.put("reasons", reasonsArray);
+                json.put("reason", reasonsArray);
             }
 
             root.add(json);
         }
-
-        try (StringWriter writer = new StringWriter()) {
-            root.appendTo(writer);
-            reflectConfig.produce(new GeneratedResourceBuildItem("META-INF/native-image/reflect-config.json",
-                    writer.toString().getBytes(StandardCharsets.UTF_8)));
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+        return root;
     }
 
     private static void extractToJsonArray(Set<ReflectiveMethodBuildItem> methodSet, JsonArrayBuilder methodsArray) {
@@ -165,7 +142,7 @@ public class NativeImageReflectConfigStep {
         }
     }
 
-    public void addReflectiveMethod(Map<String, ReflectionInfo> reflectiveClasses, ReflectiveMethodBuildItem methodInfo) {
+    public static void addReflectiveMethod(Map<String, ReflectionInfo> reflectiveClasses, ReflectiveMethodBuildItem methodInfo) {
         String cl = methodInfo.getDeclaringClass();
         ReflectionInfo existing = reflectiveClasses.get(cl);
         if (existing == null) {
@@ -189,8 +166,8 @@ public class NativeImageReflectConfigStep {
         }
     }
 
-    public void addReflectiveClass(Map<String, ReflectionInfo> reflectiveClasses, Set<String> forcedNonWeakClasses,
-            ReflectiveClassBuildItem classBuildItem) {
+    public static void addReflectiveClass(Map<String, ReflectionInfo> reflectiveClasses, Set<String> forcedNonWeakClasses,
+                                          ReflectiveClassBuildItem classBuildItem) {
         for (String cl : classBuildItem.getClassNames()) {
             ReflectionInfo existing = reflectiveClasses.get(cl);
             if (existing == null) {
@@ -231,7 +208,7 @@ public class NativeImageReflectConfigStep {
         }
     }
 
-    public void addReflectiveField(Map<String, ReflectionInfo> reflectiveClasses, ReflectiveFieldBuildItem fieldInfo) {
+    public static void addReflectiveField(Map<String, ReflectionInfo> reflectiveClasses, ReflectiveFieldBuildItem fieldInfo) {
         String cl = fieldInfo.getDeclaringClass();
         ReflectionInfo existing = reflectiveClasses.get(cl);
         if (existing == null) {

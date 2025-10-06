@@ -488,7 +488,9 @@ public interface NativeConfig {
          * <p>
          * the resource {@code red.png} will be available in the native image while the resources {@code foo/green.png}
          * and {@code bar/blue.png} will not be available in the native image.
+         * @deprecated Excluding resources is not supported in the new reachability-metadata.json file used with Mandrel/GraalVM 25.0 and onwards
          */
+        @Deprecated(since = "3.29", forRemoval = true)
         Optional<List<String>> excludes();
     }
 

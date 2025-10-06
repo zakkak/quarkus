@@ -1,8 +1,5 @@
 package io.quarkus.deployment.steps;
 
-import java.io.IOException;
-import java.io.StringWriter;
-import java.nio.charset.StandardCharsets;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -12,21 +9,13 @@ import java.util.Set;
 import io.quarkus.builder.Json;
 import io.quarkus.builder.Json.JsonArrayBuilder;
 import io.quarkus.builder.Json.JsonObjectBuilder;
-import io.quarkus.deployment.annotations.BuildProducer;
-import io.quarkus.deployment.annotations.BuildStep;
-import io.quarkus.deployment.builditem.GeneratedResourceBuildItem;
 import io.quarkus.deployment.builditem.nativeimage.JniRuntimeAccessBuildItem;
 import io.quarkus.deployment.builditem.nativeimage.JniRuntimeAccessFieldBuildItem;
 import io.quarkus.deployment.builditem.nativeimage.JniRuntimeAccessMethodBuildItem;
-import io.quarkus.deployment.pkg.steps.NativeOrNativeSourcesBuild;
 
-public class NativeImageJNIConfigStep {
+public class NativeImageJNIConfig {
 
-    @BuildStep(onlyIf = NativeOrNativeSourcesBuild.class)
-    void generateJniConfig(BuildProducer<GeneratedResourceBuildItem> jniConfig,
-            List<JniRuntimeAccessBuildItem> jniRuntimeAccessibleClasses,
-            List<JniRuntimeAccessFieldBuildItem> jniRuntimeAccessibleFields,
-            List<JniRuntimeAccessMethodBuildItem> jniRuntimeAccessibleMethods) {
+    static JsonArrayBuilder generateJniConfig(List<JniRuntimeAccessBuildItem> jniRuntimeAccessibleClasses, List<JniRuntimeAccessFieldBuildItem> jniRuntimeAccessibleFields, List<JniRuntimeAccessMethodBuildItem> jniRuntimeAccessibleMethods) {
         final Map<String, JniInfo> jniClasses = new LinkedHashMap<>();
 
         jniRuntimeAccessibleClasses.forEach(c -> addJniClass(jniClasses, c));
@@ -45,28 +34,14 @@ public class NativeImageJNIConfigStep {
                 json.put("allDeclaredConstructors", true);
             } else if (!info.ctorSet.isEmpty()) {
                 for (JniRuntimeAccessMethodBuildItem ctor : info.ctorSet) {
-                    JsonObjectBuilder methodObject = Json.object();
-                    methodObject.put("name", ctor.getName());
-                    JsonArrayBuilder paramsArray = Json.array();
-                    for (int i = 0; i < ctor.getParams().length; ++i) {
-                        paramsArray.add(ctor.getParams()[i]);
-                    }
-                    methodObject.put("parameterTypes", paramsArray);
-                    methodsArray.add(methodObject);
+                    methodsArray.add(createMethodObject(ctor));
                 }
             }
             if (info.methods) {
                 json.put("allDeclaredMethods", true);
             } else if (!info.methodSet.isEmpty()) {
                 for (JniRuntimeAccessMethodBuildItem method : info.methodSet) {
-                    JsonObjectBuilder methodObject = Json.object();
-                    methodObject.put("name", method.getName());
-                    JsonArrayBuilder paramsArray = Json.array();
-                    for (int i = 0; i < method.getParams().length; ++i) {
-                        paramsArray.add(method.getParams()[i]);
-                    }
-                    methodObject.put("parameterTypes", paramsArray);
-                    methodsArray.add(methodObject);
+                    methodsArray.add(createMethodObject(method));
                 }
             }
             if (!methodsArray.isEmpty()) {
@@ -85,17 +60,21 @@ public class NativeImageJNIConfigStep {
 
             root.add(json);
         }
-
-        try (StringWriter writer = new StringWriter()) {
-            root.appendTo(writer);
-            jniConfig.produce(new GeneratedResourceBuildItem("META-INF/native-image/jni-config.json",
-                    writer.toString().getBytes(StandardCharsets.UTF_8)));
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+        return root;
     }
 
-    private void addJniClass(Map<String, JniInfo> jniClasses, JniRuntimeAccessBuildItem jniRuntimeAccessBuildItem) {
+    private static JsonObjectBuilder createMethodObject(JniRuntimeAccessMethodBuildItem method) {
+        JsonObjectBuilder methodObject = Json.object();
+        methodObject.put("name", method.getName());
+        JsonArrayBuilder paramsArray = Json.array();
+        for (int i = 0; i < method.getParams().length; ++i) {
+            paramsArray.add(method.getParams()[i]);
+        }
+        methodObject.put("parameterTypes", paramsArray);
+        return methodObject;
+    }
+
+    private static void addJniClass(Map<String, JniInfo> jniClasses, JniRuntimeAccessBuildItem jniRuntimeAccessBuildItem) {
         for (String cl : jniRuntimeAccessBuildItem.getClassNames()) {
             JniInfo existing = jniClasses.get(cl);
             if (existing == null) {
@@ -114,7 +93,7 @@ public class NativeImageJNIConfigStep {
         }
     }
 
-    private void addJniMethod(Map<String, JniInfo> reflectiveClasses, JniRuntimeAccessMethodBuildItem methodInfo) {
+    private static void addJniMethod(Map<String, JniInfo> reflectiveClasses, JniRuntimeAccessMethodBuildItem methodInfo) {
         String cl = methodInfo.getDeclaringClass();
         JniInfo existing = reflectiveClasses.get(cl);
         if (existing == null) {
@@ -127,7 +106,7 @@ public class NativeImageJNIConfigStep {
         }
     }
 
-    private void addJniField(Map<String, JniInfo> jniClasses, JniRuntimeAccessFieldBuildItem fieldInfo) {
+    private static void addJniField(Map<String, JniInfo> jniClasses, JniRuntimeAccessFieldBuildItem fieldInfo) {
         String cl = fieldInfo.getDeclaringClass();
         JniInfo existing = jniClasses.get(cl);
         if (existing == null) {

@@ -39,10 +39,18 @@ public final class NativeImageResourcePatternsBuildItem extends MultiBuildItem {
         this.excludePatterns = excludePatterns;
     }
 
+    /**
+     * @deprecated Excluding resources is not supported in the new reachability-metadata.json file used with Mandrel/GraalVM 25.0 and onwards
+     */
+    @Deprecated(since = "3.29", forRemoval = true)
     public List<String> getExcludePatterns() {
         return excludePatterns;
     }
 
+    /**
+     * @deprecated Starting with Mandrel/GraalVM 25.0 and onwards globs are used instead of patters, please use {@link Builder#includeGlobs(String...)} instead
+     */
+    @Deprecated(since = "3.29", forRemoval = true)
     public List<String> getIncludePatterns() {
         return includePatterns;
     }
@@ -72,7 +80,9 @@ public final class NativeImageResourcePatternsBuildItem extends MultiBuildItem {
          *
          * @param glob the glob pattern to add to the list of patterns to exclude
          * @return this {@link Builder}
+         * @deprecated Excluding resources is not supported in the new reachability-metadata.json file used with Mandrel/GraalVM 25.0 and onwards
          */
+        @Deprecated(since = "3.29", forRemoval = true)
         public Builder excludeGlob(String glob) {
             excludePatterns.add(GlobUtil.toRegexPattern(glob));
             return this;
@@ -87,7 +97,9 @@ public final class NativeImageResourcePatternsBuildItem extends MultiBuildItem {
          *
          * @param globs the glob patterns to add to the list of patterns to exclude
          * @return this {@link Builder}
+         * @deprecated Excluding resources is not supported in the new reachability-metadata.json file used with Mandrel/GraalVM 25.0 and onwards
          */
+        @Deprecated(since = "3.29", forRemoval = true)
         public Builder excludeGlobs(Collection<String> globs) {
             globs.stream().map(GlobUtil::toRegexPattern).forEach(excludePatterns::add);
             return this;
@@ -102,7 +114,9 @@ public final class NativeImageResourcePatternsBuildItem extends MultiBuildItem {
          *
          * @param globs the glob patterns to add to the list of patterns to exclude
          * @return this {@link Builder}
+         * @deprecated Excluding resources is not supported in the new reachability-metadata.json file used with Mandrel/GraalVM 25.0 and onwards
          */
+        @Deprecated(since = "3.29", forRemoval = true)
         public Builder excludeGlobs(String... globs) {
             Stream.of(globs).map(GlobUtil::toRegexPattern).forEach(excludePatterns::add);
             return this;
@@ -116,7 +130,9 @@ public final class NativeImageResourcePatternsBuildItem extends MultiBuildItem {
          *
          * @param pattern the regular expression to add to the list of patterns to exclude
          * @return this {@link Builder}
+         * @deprecated Excluding resources is not supported in the new reachability-metadata.json file used with Mandrel/GraalVM 25.0 and onwards
          */
+        @Deprecated(since = "3.29", forRemoval = true)
         public Builder excludePattern(String pattern) {
             excludePatterns.add(pattern);
             return this;
@@ -130,7 +146,9 @@ public final class NativeImageResourcePatternsBuildItem extends MultiBuildItem {
          *
          * @param patterns the regular expressions to add to the list of patterns to exclude
          * @return this {@link Builder}
+         * @deprecated Excluding resources is not supported in the new reachability-metadata.json file used with Mandrel/GraalVM 25.0 and onwards
          */
+        @Deprecated(since = "3.29", forRemoval = true)
         public Builder excludePatterns(Collection<String> patterns) {
             excludePatterns.addAll(patterns);
             return this;
@@ -144,7 +162,9 @@ public final class NativeImageResourcePatternsBuildItem extends MultiBuildItem {
          *
          * @param patterns the regular expressions to add to the list of patterns to exclude
          * @return this {@link Builder}
+         * @deprecated Excluding resources is not supported in the new reachability-metadata.json file used with Mandrel/GraalVM 25.0 and onwards
          */
+        @Deprecated(since = "3.29", forRemoval = true)
         public Builder excludePatterns(String... patterns) {
             Stream.of(patterns).forEach(excludePatterns::add);
             return this;
@@ -199,7 +219,9 @@ public final class NativeImageResourcePatternsBuildItem extends MultiBuildItem {
          *
          * @param pattern the regular expression to add
          * @return this {@link Builder}
+         * @deprecated Starting with Mandrel/GraalVM 25.0 and onwards globs are used instead of patters, please use {@link Builder#includeGlob(String)} instead
          */
+        @Deprecated(since = "3.29", forRemoval = true)
         public Builder includePattern(String pattern) {
             includePatterns.add(pattern);
             return this;
@@ -212,7 +234,9 @@ public final class NativeImageResourcePatternsBuildItem extends MultiBuildItem {
          *
          * @param patterns the regular expressions to add
          * @return this {@link Builder}
+         * @deprecated Starting with Mandrel/GraalVM 25.0 and onwards globs are used instead of patters, please use {@link Builder#includeGlobs(Collection)}s instead
          */
+        @Deprecated(since = "3.29", forRemoval = true)
         public Builder includePatterns(Collection<String> patterns) {
             includePatterns.addAll(patterns);
             return this;
@@ -225,7 +249,9 @@ public final class NativeImageResourcePatternsBuildItem extends MultiBuildItem {
          *
          * @param patterns the regular expressions to add
          * @return this {@link Builder}
+         * @deprecated Starting with Mandrel/GraalVM 25.0 and onwards globs are used instead of patters, please use {@link Builder#includeGlobs(String...)} instead
          */
+        @Deprecated(since = "3.29", forRemoval = true)
         public Builder includePatterns(String... patterns) {
             Stream.of(patterns).forEach(includePatterns::add);
             return this;
