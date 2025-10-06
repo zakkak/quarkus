@@ -196,15 +196,6 @@ public final class ReflectiveClassBuildItem extends MultiBuildItem {
         return queryConstructors;
     }
 
-    /**
-     * @deprecated As of GraalVM 21.2 finalFieldsWritable is no longer needed when registering fields for reflection. This will
-     *             be removed in a future version of Quarkus.
-     */
-    @Deprecated
-    public boolean areFinalFieldsWritable() {
-        return false;
-    }
-
     public boolean isWeak() {
         return weak;
     }
@@ -333,15 +324,6 @@ public final class ReflectiveClassBuildItem extends MultiBuildItem {
 
         public Builder classes() {
             return classes(true);
-        }
-
-        /**
-         * @deprecated As of GraalVM 21.2 finalFieldsWritable is no longer needed when registering fields for reflection. This
-         *             will be removed in a future version of Quarkus.
-         */
-        @Deprecated(forRemoval = true)
-        public Builder finalFieldsWritable(boolean finalFieldsWritable) {
-            return this;
         }
 
         public Builder weak(boolean weak) {
