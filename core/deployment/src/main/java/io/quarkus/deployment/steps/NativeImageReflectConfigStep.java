@@ -76,7 +76,7 @@ public class NativeImageReflectConfigStep {
         for (Map.Entry<String, ReflectionInfo> entry : reflectiveClasses.entrySet()) {
             JsonObjectBuilder json = Json.object();
 
-            json.put("name", entry.getKey());
+            json.put("type", entry.getKey());
 
             ReflectionInfo info = entry.getValue();
             JsonArrayBuilder methodsArray = Json.array();

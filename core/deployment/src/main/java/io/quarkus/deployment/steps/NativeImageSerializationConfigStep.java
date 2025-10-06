@@ -36,7 +36,7 @@ public class NativeImageSerializationConfigStep {
         JsonObjectBuilder root = Json.object();
         JsonArrayBuilder types = Json.array();
         for (String serializableClass : serializableClasses) {
-            types.add(Json.object().put("name", serializableClass));
+            types.add(Json.object().put("type", serializableClass));
         }
         root.put("types", types);
 
