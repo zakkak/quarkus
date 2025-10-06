@@ -37,7 +37,7 @@ public class NativeImageJNIConfigStep {
         for (Map.Entry<String, JniInfo> entry : jniClasses.entrySet()) {
             JsonObjectBuilder json = Json.object();
 
-            json.put("name", entry.getKey());
+            json.put("type", entry.getKey());
 
             JniInfo info = entry.getValue();
             JsonArrayBuilder methodsArray = Json.array();

@@ -76,20 +76,16 @@ public class NativeImageReflectConfigStep {
         for (Map.Entry<String, ReflectionInfo> entry : reflectiveClasses.entrySet()) {
             JsonObjectBuilder json = Json.object();
 
-            json.put("name", entry.getKey());
+            json.put("type", entry.getKey());
 
             ReflectionInfo info = entry.getValue();
             JsonArrayBuilder methodsArray = Json.array();
-            JsonArrayBuilder queriedMethodsArray = Json.array();
             if (info.typeReachable != null) {
                 json.put("condition", Json.object().put("typeReachable", info.typeReachable));
             }
             if (info.constructors) {
                 json.put("allDeclaredConstructors", true);
             } else {
-                if (info.queryConstructors) {
-                    json.put("queryAllDeclaredConstructors", true);
-                }
                 if (!info.ctorSet.isEmpty()) {
                     extractToJsonArray(info.ctorSet, methodsArray);
                 }
@@ -100,21 +96,12 @@ public class NativeImageReflectConfigStep {
             if (info.methods) {
                 json.put("allDeclaredMethods", true);
             } else {
-                if (info.queryMethods) {
-                    json.put("queryAllDeclaredMethods", true);
-                }
                 if (!info.methodSet.isEmpty()) {
                     extractToJsonArray(info.methodSet, methodsArray);
-                }
-                if (!info.queriedMethodSet.isEmpty()) {
-                    extractToJsonArray(info.queriedMethodSet, queriedMethodsArray);
                 }
             }
             if (!methodsArray.isEmpty()) {
                 json.put("methods", methodsArray);
-            }
-            if (!queriedMethodsArray.isEmpty()) {
-                json.put("queriedMethods", queriedMethodsArray);
             }
 
             if (info.fields) {
@@ -174,11 +161,7 @@ public class NativeImageReflectConfigStep {
         if (methodInfo.getName().equals("<init>")) {
             existing.ctorSet.add(methodInfo);
         } else {
-            if (methodInfo.isQueryOnly()) {
-                existing.queriedMethodSet.add(methodInfo);
-            } else {
-                existing.methodSet.add(methodInfo);
-            }
+            existing.methodSet.add(methodInfo);
         }
         String reason = methodInfo.getReason();
         if (reason != null) {
@@ -200,14 +183,8 @@ public class NativeImageReflectConfigStep {
                 if (classBuildItem.isConstructors()) {
                     existing.constructors = true;
                 }
-                if (classBuildItem.isQueryConstructors()) {
-                    existing.queryConstructors = true;
-                }
                 if (classBuildItem.isMethods()) {
                     existing.methods = true;
-                }
-                if (classBuildItem.isQueryMethods()) {
-                    existing.queryMethods = true;
                 }
                 if (classBuildItem.isFields()) {
                     existing.fields = true;
@@ -250,9 +227,7 @@ public class NativeImageReflectConfigStep {
     static final class ReflectionInfo {
         boolean constructors;
         boolean publicConstructors;
-        boolean queryConstructors;
         boolean methods;
-        boolean queryMethods;
         boolean fields;
         boolean classes;
         boolean serialization;
@@ -261,7 +236,6 @@ public class NativeImageReflectConfigStep {
         String typeReachable;
         Set<String> fieldSet = new HashSet<>();
         Set<ReflectiveMethodBuildItem> methodSet = new HashSet<>();
-        Set<ReflectiveMethodBuildItem> queriedMethodSet = new HashSet<>();
         Set<ReflectiveMethodBuildItem> ctorSet = new HashSet<>();
 
         private ReflectionInfo() {
@@ -269,13 +243,11 @@ public class NativeImageReflectConfigStep {
 
         private ReflectionInfo(ReflectiveClassBuildItem classBuildItem, String typeReachable) {
             this.methods = classBuildItem.isMethods();
-            this.queryMethods = classBuildItem.isQueryMethods();
             this.fields = classBuildItem.isFields();
             this.classes = classBuildItem.isClasses();
             this.typeReachable = typeReachable;
             this.constructors = classBuildItem.isConstructors();
             this.publicConstructors = classBuildItem.isPublicConstructors();
-            this.queryConstructors = classBuildItem.isQueryConstructors();
             this.serialization = classBuildItem.isSerialization();
             this.unsafeAllocated = classBuildItem.isUnsafeAllocated();
             if (classBuildItem.getReason() != null) {
