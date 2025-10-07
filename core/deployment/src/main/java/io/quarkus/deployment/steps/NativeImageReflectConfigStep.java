@@ -250,8 +250,16 @@ public class NativeImageReflectConfigStep {
     static final class ReflectionInfo {
         boolean constructors;
         boolean publicConstructors;
+        /**
+         * @deprecated as moving to reachability-metadata.json will include all reflection queries for registered classes (see https://github.com/quarkusio/quarkus/issues/50441)
+         */
+        @Deprecated(since = "3.29", forRemoval = true)
         boolean queryConstructors;
         boolean methods;
+        /**
+         * @deprecated as moving to reachability-metadata.json will include all reflection queries for registered classes (see https://github.com/quarkusio/quarkus/issues/50441)
+         */
+        @Deprecated(since = "3.29", forRemoval = true)
         boolean queryMethods;
         boolean fields;
         boolean classes;

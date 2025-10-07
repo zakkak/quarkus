@@ -16,6 +16,10 @@ public final class ReflectiveMethodBuildItem extends MultiBuildItem {
     final String declaringClass;
     final String name;
     final String[] params;
+    /**
+     * @deprecated as moving to reachability-metadata.json will include all reflection queries for registered classes (see https://github.com/quarkusio/quarkus/issues/50441)
+     */
+    @Deprecated(since = "3.29", forRemoval = true)
     final boolean queryOnly;
     final String reason;
 
@@ -27,10 +31,18 @@ public final class ReflectiveMethodBuildItem extends MultiBuildItem {
         this(reason, false, methodInfo);
     }
 
+    /**
+     * @deprecated as moving to reachability-metadata.json will include all reflection queries for registered classes (see https://github.com/quarkusio/quarkus/issues/50441)
+     */
+    @Deprecated(since = "3.29", forRemoval = true)
     public ReflectiveMethodBuildItem(boolean queryOnly, MethodInfo methodInfo) {
         this(null, queryOnly, methodInfo);
     }
 
+    /**
+     * @deprecated as moving to reachability-metadata.json will include all reflection queries for registered classes (see https://github.com/quarkusio/quarkus/issues/50441)
+     */
+    @Deprecated(since = "3.29", forRemoval = true)
     public ReflectiveMethodBuildItem(String reason, boolean queryOnly, MethodInfo methodInfo) {
         this(reason, queryOnly, methodInfo.declaringClass().name().toString(), methodInfo.name(),
                 methodInfo.parameterTypes().stream().map(p -> p.name().toString()).toArray(String[]::new));
@@ -40,10 +52,18 @@ public final class ReflectiveMethodBuildItem extends MultiBuildItem {
         this(false, method);
     }
 
+    /**
+     * @deprecated as moving to reachability-metadata.json will include all reflection queries for registered classes (see https://github.com/quarkusio/quarkus/issues/50441)
+     */
+    @Deprecated(since = "3.29", forRemoval = true)
     public ReflectiveMethodBuildItem(boolean queryOnly, Method method) {
         this(null, queryOnly, method);
     }
 
+    /**
+     * @deprecated as moving to reachability-metadata.json will include all reflection queries for registered classes (see https://github.com/quarkusio/quarkus/issues/50441)
+     */
+    @Deprecated(since = "3.29", forRemoval = true)
     public ReflectiveMethodBuildItem(String reason, boolean queryOnly, Method method) {
         this(reason, queryOnly, method.getDeclaringClass().getName(), method.getName(),
                 Arrays.stream(method.getParameterTypes()).map(Class::getName).toArray(String[]::new));
@@ -59,11 +79,19 @@ public final class ReflectiveMethodBuildItem extends MultiBuildItem {
         this(reason, false, declaringClass, name, params);
     }
 
+    /**
+     * @deprecated as moving to reachability-metadata.json will include all reflection queries for registered classes (see https://github.com/quarkusio/quarkus/issues/50441)
+     */
+    @Deprecated(since = "3.29", forRemoval = true)
     public ReflectiveMethodBuildItem(boolean queryOnly, String declaringClass, String name,
             String... params) {
         this(null, queryOnly, declaringClass, name, params);
     }
 
+    /**
+     * @deprecated as moving to reachability-metadata.json will include all reflection queries for registered classes (see https://github.com/quarkusio/quarkus/issues/50441)
+     */
+    @Deprecated(since = "3.29", forRemoval = true)
     public ReflectiveMethodBuildItem(String reason, boolean queryOnly, String declaringClass, String name,
             String... params) {
         this.declaringClass = declaringClass;
@@ -83,6 +111,10 @@ public final class ReflectiveMethodBuildItem extends MultiBuildItem {
         this(false, declaringClass, name, params);
     }
 
+    /**
+     * @deprecated as moving to reachability-metadata.json will include all reflection queries for registered classes (see https://github.com/quarkusio/quarkus/issues/50441)
+     */
+    @Deprecated(since = "3.29", forRemoval = true)
     public ReflectiveMethodBuildItem(boolean queryOnly, String declaringClass, String name,
             Class<?>... params) {
         this(null, queryOnly, declaringClass, name, Arrays.stream(params).map(Class::getName).toArray(String[]::new));
@@ -100,6 +132,7 @@ public final class ReflectiveMethodBuildItem extends MultiBuildItem {
         return declaringClass;
     }
 
+    @Deprecated(since = "3.29", forRemoval = true)
     public boolean isQueryOnly() {
         return queryOnly;
     }

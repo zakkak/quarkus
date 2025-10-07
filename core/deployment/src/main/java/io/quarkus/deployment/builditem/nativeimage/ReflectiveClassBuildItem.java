@@ -18,11 +18,19 @@ public final class ReflectiveClassBuildItem extends MultiBuildItem {
     // The names of the classes that should be registered for reflection
     private final List<String> className;
     private final boolean methods;
+    /**
+     * @deprecated as moving to reachability-metadata.json will include all reflection queries for registered classes (see https://github.com/quarkusio/quarkus/issues/50441)
+     */
+    @Deprecated(since = "3.29", forRemoval = true)
     private final boolean queryMethods;
     private final boolean fields;
     private final boolean classes;
     private final boolean constructors;
     private final boolean publicConstructors;
+    /**
+     * @deprecated as moving to reachability-metadata.json will include all reflection queries for registered classes (see https://github.com/quarkusio/quarkus/issues/50441)
+     */
+    @Deprecated(since = "3.29", forRemoval = true)
     private final boolean queryConstructors;
     private final boolean weak;
     private final boolean serialization;
@@ -48,6 +56,10 @@ public final class ReflectiveClassBuildItem extends MultiBuildItem {
         return new Builder().className(classNames);
     }
 
+    /**
+     * @deprecated as moving to reachability-metadata.json will include all reflection queries for registered classes (see https://github.com/quarkusio/quarkus/issues/50441)
+     */
+    @Deprecated(since = "3.29", forRemoval = true)
     private ReflectiveClassBuildItem(boolean constructors, boolean queryConstructors, boolean methods, boolean queryMethods,
             boolean fields, boolean getClasses, boolean weak, boolean serialization, boolean unsafeAllocated, String reason,
             Class<?>... classes) {
@@ -127,6 +139,10 @@ public final class ReflectiveClassBuildItem extends MultiBuildItem {
                 null, className);
     }
 
+    /**
+     * @deprecated as moving to reachability-metadata.json will include all reflection queries for registered classes (see https://github.com/quarkusio/quarkus/issues/50441)
+     */
+    @Deprecated(since = "3.29", forRemoval = true)
     ReflectiveClassBuildItem(boolean constructors, boolean publicConstructors, boolean queryConstructors, boolean methods,
             boolean queryMethods,
             boolean fields, boolean classes, boolean weak, boolean serialization,
@@ -172,6 +188,10 @@ public final class ReflectiveClassBuildItem extends MultiBuildItem {
         return methods;
     }
 
+    /**
+     * @deprecated as moving to reachability-metadata.json will include all reflection queries for registered classes (see https://github.com/quarkusio/quarkus/issues/50441)
+     */
+    @Deprecated(since = "3.29", forRemoval = true)
     public boolean isQueryMethods() {
         return queryMethods;
     }
@@ -192,6 +212,10 @@ public final class ReflectiveClassBuildItem extends MultiBuildItem {
         return publicConstructors;
     }
 
+    /**
+     * @deprecated as moving to reachability-metadata.json will include all reflection queries for registered classes (see https://github.com/quarkusio/quarkus/issues/50441)
+     */
+    @Deprecated(since = "3.29", forRemoval = true)
     public boolean isQueryConstructors() {
         return queryConstructors;
     }
@@ -225,8 +249,16 @@ public final class ReflectiveClassBuildItem extends MultiBuildItem {
         private String[] className;
         private boolean constructors = true;
         private boolean publicConstructors = false;
+        /**
+         * @deprecated as moving to reachability-metadata.json will include all reflection queries for registered classes (see https://github.com/quarkusio/quarkus/issues/50441)
+         */
+        @Deprecated(since = "3.29", forRemoval = true)
         private boolean queryConstructors;
         private boolean methods;
+        /**
+         * @deprecated as moving to reachability-metadata.json will include all reflection queries for registered classes (see https://github.com/quarkusio/quarkus/issues/50441)
+         */
+        @Deprecated(since = "3.29", forRemoval = true)
         private boolean queryMethods;
         private boolean fields;
         private boolean classes;
@@ -272,12 +304,19 @@ public final class ReflectiveClassBuildItem extends MultiBuildItem {
         /**
          * Configures whether constructors should be registered for reflection, for query purposes only.
          * Setting this enables getting all declared constructors for the class but does not allow invoking them reflectively.
+         *
+         * @deprecated as moving to reachability-metadata.json will include all reflection queries for registered classes (see https://github.com/quarkusio/quarkus/issues/50441)
          */
+        @Deprecated(since = "3.29", forRemoval = true)
         public Builder queryConstructors(boolean queryConstructors) {
             this.queryConstructors = queryConstructors;
             return this;
         }
 
+        /**
+         * @deprecated as moving to reachability-metadata.json will include all reflection queries for registered classes (see https://github.com/quarkusio/quarkus/issues/50441)
+         */
+        @Deprecated(since = "3.29", forRemoval = true)
         public Builder queryConstructors() {
             return queryConstructors(true);
         }
@@ -299,12 +338,19 @@ public final class ReflectiveClassBuildItem extends MultiBuildItem {
          * Configures whether declared methods should be registered for reflection, for query purposes only,
          * i.e. {@link Class#getDeclaredMethods()}. Setting this enables getting all declared methods for the class but
          * does not allow invoking them reflectively.
+         *
+         * @deprecated as moving to reachability-metadata.json will include all reflection queries for registered classes (see https://github.com/quarkusio/quarkus/issues/50441)
          */
+        @Deprecated(since = "3.29", forRemoval = true)
         public Builder queryMethods(boolean queryMethods) {
             this.queryMethods = queryMethods;
             return this;
         }
 
+        /**
+         * @deprecated as moving to reachability-metadata.json will include all reflection queries for registered classes (see https://github.com/quarkusio/quarkus/issues/50441)
+         */
+        @Deprecated(since = "3.29", forRemoval = true)
         public Builder queryMethods() {
             return queryMethods(true);
         }
