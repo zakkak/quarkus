@@ -19,20 +19,20 @@ final class TestUtils {
 
     static List<String> nativeArguments(String... initialArguments) {
         final List<String> result = new ArrayList<>(Arrays.asList(initialArguments));
-        appendArgumentIfSet("quarkus.native.container-build", result);
-        appendArgumentIfSet("quarkus.native.builder-image", result);
-        appendArgumentIfSet("quarkus.native.container-runtime", result);
-        appendArgumentIfSet("quarkus.native.container-runtime-options", result);
+        System.getProperties().forEach((key, value) -> {
+            if (key instanceof String keyStr && value instanceof String valueStr) {
+                appendArgumentIfSet(keyStr, valueStr, result);
+            }
+        });
         return result;
     }
 
-    private static void appendArgumentIfSet(String property, List<String> result) {
-        final String value = System.getProperty(property);
+    private static void appendArgumentIfSet(String property, String value, List<String> result) {
         if (value != null) {
             if (value.isEmpty()) {
                 result.add("-D" + property);
             } else {
-                result.add(String.format("-D%s=%s", property, value));
+                result.add(String.format("-D%s=\"%s\"", property, value));
             }
         }
     }
