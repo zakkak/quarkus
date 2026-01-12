@@ -222,8 +222,7 @@ public class ReflectiveHierarchyStep {
                 : combinedIndexBuildItem.getIndex()).getClassByName(name);
 
         if (info == null) {
-            unindexedClasses.putIfAbsent(name, new TreeSet<>());
-            unindexedClasses.get(name).add(source);
+            unindexedClasses.computeIfAbsent(name, k -> new TreeSet<>()).add(source);
         }
 
         if (processedReflectiveHierarchies.contains(name)) {
